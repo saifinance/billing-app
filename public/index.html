@@ -14,16 +14,19 @@
             <a href="index.html" class="logo-text">SaiBilling</a>
             <nav class="app-nav">
                 <ul>
-                    <li><a href="index.html" class="active">Dashboard</a></li>
-                    <li><a href="create-invoice.html">Create Invoice</a></li>
-                    <!-- <li><a href="clients.html">Clients</a></li> -->
-                    <!-- <li><a href="settings.html">Settings</a></li> -->
+                    <li><a href="index.html" class="nav-link active" data-page="index">Dashboard</a></li>
+                    <li><a href="create-invoice.html" class="nav-link" data-page="create-invoice">Create Invoice</a></li>
+                    <!-- <li><a href="settings.html" class="nav-link" data-page="settings">Settings</a></li> -->
                 </ul>
             </nav>
+            <div>
+                <span id="user-email-display" style="margin-right: 15px; color: var(--medium-text-color);"></span>
+                <button id="logout-btn" class="btn btn-secondary" style="display: none;">Logout</button>
+            </div>
         </div>
     </header>
 
-    <main>
+    <main id="main-content"> <!-- Added ID for content protection -->
         <div class="container">
             <div class="d-flex justify-between align-center mb-20">
                 <h1>Invoices</h1>
@@ -44,7 +47,6 @@
                         </tr>
                     </thead>
                     <tbody id="invoices-table-body">
-                        <!-- Invoices will be loaded here by JavaScript -->
                         <tr>
                             <td colspan="7" style="text-align: center;">Loading invoices...</td>
                         </tr>
@@ -59,8 +61,11 @@
     </footer>
 
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
     <script src="js/config.js"></script>
+    <script src="js/auth.js"></script>
     <script src="js/firestoreService.js"></script>
     <script src="js/app.js" defer></script>
 </body>

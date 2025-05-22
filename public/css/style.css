@@ -95,6 +95,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 .form-group label { display: block; font-weight: 600; margin-bottom: 5px; color: var(--dark-text-color); }
 .form-group input[type="text"],
 .form-group input[type="email"],
+.form-group input[type="password"], /* Added for auth forms */
 .form-group input[type="number"],
 .form-group input[type="date"],
 .form-group select,
@@ -109,6 +110,11 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 }
 .checkbox-group { display: flex; align-items: center; gap: 10px; }
 .checkbox-group input[type="checkbox"] { width: auto; accent-color: var(--accent-purple-color); }
+.error-message { /* General error message styling */
+    color: #dc3545; /* Bootstrap danger color */
+    font-size: 0.9em;
+    margin-top: 5px;
+}
 
 
 /* --- Tables --- */
@@ -121,7 +127,7 @@ tbody tr:hover { background-color: #f1f1f1; }
 
 /* Item Lines for Invoice Form */
 #invoice-items-table th, #invoice-items-table td { padding: 8px; }
-#invoice-items-table input { padding: 0.5rem; }
+#invoice-items-table input { padding: 0.5rem; } /* Ensures form control styles are applied if not using .form-control class */
 .total-section { margin-top: 20px; text-align: right; }
 .total-section p { font-size: 1.1rem; margin: 5px 0; }
 .total-section strong { color: var(--primary-color); }
@@ -134,8 +140,138 @@ tbody tr:hover { background-color: #f1f1f1; }
 .justify-between { justify-content: space-between; }
 .align-center { align-items: center; }
 
+/* --- Login/Auth Page Specific --- */
+.login-container {
+    max-width: 450px;
+    margin: 50px auto 20px auto; /* Added auto for horizontal centering */
+}
+.auth-form {
+    padding: 30px;
+}
+.auth-form h2 {
+    text-align: center;
+    margin-bottom: 25px;
+}
+.btn-block {
+    display: block;
+    width: 100%;
+}
+.auth-switch {
+    text-align: center;
+    margin-top: 15px;
+    font-size: 0.9em;
+}
+.auth-switch a {
+    font-weight: 600;
+    color: var(--accent-purple-color);
+}
+
+/* Specific styles for view-invoice.html page */
+.invoice-view-container {
+    background: var(--white-color);
+    padding: 30px;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-md);
+}
+.invoice-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start; /* Align items to the top */
+    margin-bottom: 20px;
+}
+.company-details p, .invoice-title-section p {
+    margin: 3px 0;
+    font-size: 0.9em;
+}
+.client-details-section p {
+    margin: 2px 0;
+}
+.invoice-summary-section h3 {
+    margin-top: 10px;
+}
+
+/* Status badge styling (example, can be expanded) */
+.status-draft { background-color: #6c757d; color: white; padding: 3px 7px; border-radius: 4px; font-size: 0.8em; }
+.status-sent { background-color: #007bff; color: white; padding: 3px 7px; border-radius: 4px; font-size: 0.8em; }
+.status-paid { background-color: #28a745; color: white; padding: 3px 7px; border-radius: 4px; font-size: 0.8em; }
+.status-overdue { background-color: #dc3545; color: white; padding: 3px 7px; border-radius: 4px; font-size: 0.8em; }
+.status-cancelled { background-color: #343a40; color: white; padding: 3px 7px; border-radius: 4px; font-size: 0.8em; }
+
+
 /* --- Footer --- */
 .app-footer {
     background: var(--primary-color); color: var(--light-gray-bg);
     text-align: center; padding: 1rem; margin-top: auto; font-size: 0.9rem;
+}
+
+/* --- Print Styles (Basic) --- */
+@media print {
+    body {
+        font-family: 'Times New Roman', Times, serif; /* Or other serif font */
+        font-size: 11pt;
+        line-height: 1.3;
+        background-color: #fff !important; /* Ensure white background */
+        color: #000 !important; /* Ensure black text */
+        margin: 0;
+        padding: 0;
+    }
+    .app-header, .app-footer, .no-print, #print-invoice-btn, #download-pdf-btn, .app-nav, #logout-btn, #user-email-display, .actions-cell /* Hide non-print elements */ {
+        display: none !important;
+    }
+    .invoice-view-container {
+        width: 100%;
+        max-width: 100%;
+        box-shadow: none !important;
+        border: none !important;
+        padding: 0.5cm 1cm; /* Adjust print margins */
+        margin: 0 auto;
+    }
+    .container { /* Reset container padding for print */
+         padding-left: 0;
+         padding-right: 0;
+    }
+    a {
+        text-decoration: none;
+        color: #000 !important; /* Black links for print */
+    }
+    /* Optionally show full URLs for external links when printing, uncomment if needed
+    a[href^="http"]:after, a[href^="https"]:after {
+        content: " (" attr(href) ")";
+        font-size: 0.8em;
+        color: #555;
+    }
+    */
+    table {
+        width: 100% !important;
+        border-collapse: collapse !important;
+        margin-bottom: 10px;
+    }
+    th, td {
+        border: 1px solid #888 !important; /* Lighter border for print */
+        padding: 5px 8px !important;
+        text-align: left !important;
+    }
+    th {
+        background-color: #f0f0f0 !important; /* Light gray for table headers */
+        font-weight: bold;
+    }
+    h1, h2, h3, h4, p {
+        page-break-after: avoid !important;
+        page-break-inside: avoid !important;
+        color: #000 !important;
+    }
+    tr, .form-section /* Try to keep table rows and sections from breaking mid-page */ {
+        page-break-inside: avoid !important;
+    }
+    .mb-20 { margin-bottom: 10px !important; } /* Reduce margins for print */
+    .mt-20 { margin-top: 10px !important; }
+    .text-right { text-align: right !important; }
+    .invoice-header { display: flex; justify-content: space-between; align-items: flex-start; }
+    .company-details { flex: 1; }
+    .invoice-title-section { flex: 1; text-align: right; }
+    hr {
+        border: none;
+        border-top: 1px solid #ccc !important; /* Make hr visible for print */
+        margin: 15px 0 !important;
+    }
 }

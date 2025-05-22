@@ -14,14 +14,19 @@
             <a href="index.html" class="logo-text">SaiBilling</a>
             <nav class="app-nav">
                  <ul>
-                    <li><a href="index.html">Dashboard</a></li>
-                    <li><a href="create-invoice.html" class="active">Create Invoice</a></li>
+                    <li><a href="index.html" class="nav-link" data-page="index">Dashboard</a></li>
+                    <li><a href="create-invoice.html" class="nav-link active" data-page="create-invoice">Create Invoice</a></li>
+                    <!-- <li><a href="settings.html" class="nav-link" data-page="settings">Settings</a></li> -->
                 </ul>
             </nav>
+            <div>
+                <span id="user-email-display" style="margin-right: 15px; color: var(--medium-text-color);"></span>
+                <button id="logout-btn" class="btn btn-secondary" style="display: none;">Logout</button>
+            </div>
         </div>
     </header>
 
-    <main>
+    <main id="main-content"> <!-- Added ID for content protection -->
         <div class="container">
             <h1>Create New Invoice</h1>
             <form id="invoice-form">
@@ -133,8 +138,11 @@
     </footer>
 
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
     <script src="js/config.js"></script>
+    <script src="js/auth.js"></script>
     <script src="js/firestoreService.js"></script>
     <script src="js/app.js" defer></script>
 </body>

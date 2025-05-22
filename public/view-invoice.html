@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>View Invoice - Sai Billing</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <header class="app-header no-print">
+        <div class="header-container">
+            <a href="index.html" class="logo-text">SaiBilling</a>
+            <nav class="app-nav">
+                <ul>
+                    <li><a href="index.html" class="nav-link" data-page="index">Dashboard</a></li>
+                    <li><a href="create-invoice.html" class="nav-link" data-page="create-invoice">Create Invoice</a></li>
+                </ul>
+            </nav>
+            <div>
+                <span id="user-email-display" style="margin-right: 15px; color: var(--medium-text-color);"></span>
+                <button id="logout-btn" class="btn btn-secondary" style="display: none;">Logout</button>
+            </div>
+        </div>
+    </header>
+
+    <main id="main-content">
+        <div class="container invoice-view-container">
+            <div class="invoice-header mb-20">
+                <div class="company-details">
+                    <!-- Populated by JS from settings later -->
+                    <h1 id="view-company-name" style="font-size: 1.8em; color: var(--primary-color);">Your Company Name</h1>
+                    <p id="view-company-address">123 Main Street, City, Country</p>
+                    <p id="view-company-contact">Phone: (123) 456-7890 | Email: company@example.com</p>
+                    <p id="view-company-gstin">GSTIN: YOURGSTIN12345</p>
+                </div>
+                <div class="invoice-title-section text-right">
+                    <h2 style="font-size: 1.5em;">INVOICE</h2>
+                    <p><strong>Invoice #:</strong> <span id="view-invoice-number">Loading...</span></p>
+                    <p><strong>Date:</strong> <span id="view-invoice-date">Loading...</span></p>
+                    <p><strong>Due Date:</strong> <span id="view-due-date">Loading...</span></p>
+                </div>
+            </div>
+
+            <hr class="mb-20">
+
+            <div class="client-details-section mb-20">
+                <h3>Bill To:</h3>
+                <p id="view-client-name">Client Name</p>
+                <p id="view-client-address">Client Address</p>
+                <p id="view-client-phone">Client Phone</p>
+                <p id="view-client-email">Client Email</p>
+            </div>
+
+            <div class="table-wrapper">
+                <table id="view-invoice-items-table">
+                    <thead>
+                        <tr>
+                            <th>Description</th>
+                            <th>Qty</th>
+                            <th>Unit Price (₹)</th>
+                            <th>Amount (₹)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="view-invoice-item-lines">
+                        <!-- Item lines will be loaded here -->
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="invoice-summary-section mt-20 text-right">
+                <p><strong>Subtotal:</strong> <span id="view-subtotal">₹0.00</span></p>
+                <div id="view-gst-details" style="display:none;">
+                    <p>SGST (<span id="view-sgst-rate">0</span>%): <span id="view-sgst-amount">₹0.00</span></p>
+                    <p>CGST (<span id="view-cgst-rate">0</span>%): <span id="view-cgst-amount">₹0.00</span></p>
+                    <p>IGST (<span id="view-igst-rate">0</span>%): <span id="view-igst-amount">₹0.00</span></p> <!-- For inter-state -->
+                </div>
+                <h3><strong>Total Amount:</strong> <span id="view-total-amount">₹0.00</span></h3>
+            </div>
+
+            <div class="invoice-notes-section mt-20">
+                <h4>Notes:</h4>
+                <p id="view-notes" style="white-space: pre-wrap;">Invoice notes will appear here.</p>
+            </div>
+
+            <div class="invoice-actions mt-20 text-center no-print">
+                <button id="print-invoice-btn" class="btn btn-primary"><i class="fas fa-print"></i> Print Invoice</button>
+                <!-- <button id="download-pdf-btn" class="btn btn-secondary"><i class="fas fa-file-pdf"></i> Download PDF</button> -->
+                <a href="index.html" class="btn" style="background-color: #6c757d;">Back to Dashboard</a>
+            </div>
+        </div>
+    </main>
+
+    <footer class="app-footer no-print">
+        <p>© <span id="year"></span> Sai Billing. All rights reserved.</p>
+    </footer>
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+    <script src="js/config.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/firestoreService.js"></script>
+    <script src="js/app.js" defer></script>
+</body>
+</html>

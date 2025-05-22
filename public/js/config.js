@@ -10,21 +10,17 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase
-// The 'firebase' object is globally available from the CDN script
 try {
-    if (firebase && typeof firebase.initializeApp === 'function') {
-        const app = firebase.initializeApp(firebaseConfig); // Initialize the default app
-        const db = firebase.firestore(); // Get Firestore instance from the default app
-
-        // You might want to make 'db' accessible to other scripts if they are not in the same immediate scope
-        // or pass it around. For simplicity here, we assume firestoreService.js can access it if loaded after.
-        // However, a better practice would be to ensure db is explicitly available.
-        // For now, firestoreService.js will try to access firebase.firestore() directly.
-        console.log("Firebase Initialized successfully in config.js");
+    if (typeof firebase !== 'undefined' && typeof firebase.initializeApp === 'function') {
+        if (firebase.apps.length === 0) { // Check if Firebase hasn't been initialized yet
+            firebase.initializeApp(firebaseConfig);
+            console.log("Firebase Initialized successfully in config.js");
+        } else {
+            // console.log("Firebase already initialized."); // Default app already exists
+        }
     } else {
-        console.error("Firebase object or initializeApp function not found. Ensure Firebase SDKs are loaded before config.js.");
+        console.error("Firebase object or initializeApp function not found. Ensure Firebase SDKs (firebase-app.js) are loaded before config.js.");
     }
 } catch (e) {
     console.error("Error initializing Firebase in config.js:", e);
 }
-
