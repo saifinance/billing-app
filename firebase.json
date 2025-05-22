@@ -6,5 +6,11 @@
       "**/.*",
       "**/node_modules/**"
     ]
+    // If you answered "N" to SPA, there won't be a "rewrites" section here.
+    // If you had answered "Y", it would have a "rewrites" section.
+  },
+  "firestore": { // This section is here because you initialized firestore
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
   }
 }
