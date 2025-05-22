@@ -1,0 +1,141 @@
+/* style.css - Billing App */
+
+:root {
+    --primary-color: #002a5c; /* Deep Blue from Sai Finance */
+    --secondary-color: #0056b3;
+    --accent-purple-color: #a770ef;
+    --accent-pink-color: #ef476f;
+    --gradient-header: linear-gradient(to right, var(--accent-purple-color) 0%, var(--accent-pink-color) 100%);
+    --light-gray-bg: #f8f9fa;
+    --white-color: #ffffff;
+    --dark-text-color: #212529;
+    --medium-text-color: #6c757d;
+    --border-color: #dee2e6;
+    --shadow-sm: 0 2px 4px rgba(0,0,0,0.075);
+    --shadow-md: 0 4px 8px rgba(0,0,0,0.1);
+    --font-family: 'Poppins', sans-serif;
+    --border-radius: 5px;
+    --focus-ring-color: rgba(167, 112, 239, 0.5);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; font-size: 16px; }
+body {
+    font-family: var(--font-family);
+    line-height: 1.6;
+    color: var(--dark-text-color);
+    background-color: var(--light-gray-bg); /* Lighter background for app */
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+main { flex-grow: 1; padding-top: 70px; /* Space for fixed header */ }
+.container { width: 90%; max-width: 1200px; margin-left: auto; margin-right: auto; padding: 20px 15px; }
+a { color: var(--secondary-color); text-decoration: none; transition: color 0.3s ease; }
+a:hover { color: var(--primary-color); text-decoration: underline; }
+a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
+    outline: 2px solid var(--focus-ring-color);
+    outline-offset: 2px;
+    border-radius: var(--border-radius);
+}
+
+/* --- Header --- */
+.app-header {
+    background: var(--white-color);
+    box-shadow: var(--shadow-sm);
+    position: fixed;
+    width: 100%;
+    top: 0;
+    z-index: 1000;
+    height: 60px;
+    display: flex;
+    align-items: center;
+}
+.header-container {
+    width: 90%;
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.logo-text {
+    background: var(--gradient-header);
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+    font-weight: 700;
+    font-size: 1.8rem;
+}
+.app-nav ul { list-style: none; display: flex; gap: 20px; }
+.app-nav a { color: var(--dark-text-color); font-weight: 600; padding: 5px 10px; }
+.app-nav a.active, .app-nav a:hover { color: var(--accent-purple-color); text-decoration: none; border-bottom: 2px solid var(--accent-pink-color); }
+
+/* --- Buttons --- */
+.btn {
+    display: inline-block; padding: 0.6rem 1.2rem; border: none;
+    border-radius: var(--border-radius); font-size: 0.95rem; font-weight: 600;
+    cursor: pointer; text-decoration: none; text-align: center;
+    transition: background-color 0.3s ease, background-image 0.3s ease, transform 0.2s ease;
+    color: var(--white-color);
+}
+.btn-primary { background-image: var(--gradient-header); }
+.btn-primary:hover { background-image: linear-gradient(to right, #935ce6 0%, #e03a60 100%); transform: translateY(-1px); }
+.btn-secondary { background-color: var(--secondary-color); }
+.btn-secondary:hover { background-color: var(--primary-color); transform: translateY(-1px); }
+.btn-danger { background-color: #dc3545; }
+.btn-danger:hover { background-color: #c82333; transform: translateY(-1px); }
+.btn-icon { padding: 0.5rem; line-height: 1; }
+
+/* --- Forms --- */
+.form-section { background: var(--white-color); padding: 25px; border-radius: var(--border-radius); box-shadow: var(--shadow-sm); margin-bottom: 20px; }
+.form-section h2 { margin-bottom: 20px; color: var(--primary-color); }
+.form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; }
+.form-group { margin-bottom: 15px; }
+.form-group label { display: block; font-weight: 600; margin-bottom: 5px; color: var(--dark-text-color); }
+.form-group input[type="text"],
+.form-group input[type="email"],
+.form-group input[type="number"],
+.form-group input[type="date"],
+.form-group select,
+.form-group textarea {
+    width: 100%; padding: 0.7rem; border: 1px solid var(--border-color);
+    border-radius: var(--border-radius); font-size: 0.95rem;
+}
+.form-group textarea { min-height: 80px; }
+.form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+    border-color: var(--accent-purple-color);
+    box-shadow: 0 0 0 2px var(--focus-ring-color);
+}
+.checkbox-group { display: flex; align-items: center; gap: 10px; }
+.checkbox-group input[type="checkbox"] { width: auto; accent-color: var(--accent-purple-color); }
+
+
+/* --- Tables --- */
+.table-wrapper { overflow-x: auto; background: var(--white-color); padding: 20px; border-radius: var(--border-radius); box-shadow: var(--shadow-sm); }
+table { width: 100%; border-collapse: collapse; }
+th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid var(--border-color); }
+th { background-color: var(--light-gray-bg); font-weight: 600; color: var(--primary-color); }
+tbody tr:hover { background-color: #f1f1f1; }
+.actions-cell button { margin-right: 5px; }
+
+/* Item Lines for Invoice Form */
+#invoice-items-table th, #invoice-items-table td { padding: 8px; }
+#invoice-items-table input { padding: 0.5rem; }
+.total-section { margin-top: 20px; text-align: right; }
+.total-section p { font-size: 1.1rem; margin: 5px 0; }
+.total-section strong { color: var(--primary-color); }
+
+/* --- Utilities --- */
+.text-right { text-align: right; }
+.mt-20 { margin-top: 20px; }
+.mb-20 { margin-bottom: 20px; }
+.d-flex { display: flex; }
+.justify-between { justify-content: space-between; }
+.align-center { align-items: center; }
+
+/* --- Footer --- */
+.app-footer {
+    background: var(--primary-color); color: var(--light-gray-bg);
+    text-align: center; padding: 1rem; margin-top: auto; font-size: 0.9rem;
+}

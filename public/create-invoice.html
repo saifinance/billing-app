@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Invoice - Sai Billing</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <header class="app-header">
+        <div class="header-container">
+            <a href="index.html" class="logo-text">SaiBilling</a>
+            <nav class="app-nav">
+                 <ul>
+                    <li><a href="index.html">Dashboard</a></li>
+                    <li><a href="create-invoice.html" class="active">Create Invoice</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <div class="container">
+            <h1>Create New Invoice</h1>
+            <form id="invoice-form">
+                <input type="hidden" id="invoice-id"> <!-- For editing -->
+
+                <section class="form-section">
+                    <h2>Client Information</h2>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="client-name">Client Name*</label>
+                            <input type="text" id="client-name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="client-email">Client Email</label>
+                            <input type="email" id="client-email">
+                        </div>
+                        <div class="form-group">
+                            <label for="client-phone">Client Phone</label>
+                            <input type="text" id="client-phone">
+                        </div>
+                        <div class="form-group">
+                            <label for="client-address">Client Address</label>
+                            <textarea id="client-address"></textarea>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="form-section">
+                    <h2>Invoice Details</h2>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="invoice-number">Invoice Number*</label>
+                            <input type="text" id="invoice-number" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="invoice-date">Invoice Date*</label>
+                            <input type="date" id="invoice-date" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="due-date">Due Date*</label>
+                            <input type="date" id="due-date" required>
+                        </div>
+                         <div class="form-group">
+                            <label for="invoice-status">Status</label>
+                            <select id="invoice-status">
+                                <option value="Draft">Draft</option>
+                                <option value="Sent">Sent</option>
+                                <option value="Paid">Paid</option>
+                                <option value="Overdue">Overdue</option>
+                                <option value="Cancelled">Cancelled</option>
+                            </select>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="form-section">
+                    <h2>Invoice Items</h2>
+                    <div class="table-wrapper">
+                        <table id="invoice-items-table">
+                            <thead>
+                                <tr>
+                                    <th>Description*</th>
+                                    <th>Qty*</th>
+                                    <th>Unit Price (₹)*</th>
+                                    <th>Amount (₹)</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="invoice-item-lines">
+                                <!-- Item lines will be added here by JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <button type="button" id="add-item-btn" class="btn btn-secondary mt-20"><i class="fas fa-plus"></i> Add Item</button>
+                </section>
+
+                <section class="form-section">
+                    <h2>Summary & Notes</h2>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="notes">Notes / Payment Instructions</label>
+                            <textarea id="notes" placeholder="e.g., Bank details, UPI ID"></textarea>
+                        </div>
+                        <div>
+                            <div class="total-section">
+                                <p>Subtotal: <span id="subtotal">₹0.00</span></p>
+                                <div class="form-group checkbox-group">
+                                    <input type="checkbox" id="apply-gst">
+                                    <label for="apply-gst" style="margin-bottom:0;">Apply GST</label>
+                                    <input type="number" id="gst-rate" value="18" min="0" step="0.01" style="width: 70px; display: none;" placeholder="Rate %">
+                                </div>
+                                <p style="display: none;" id="gst-amount-display">GST Amount: <span id="gst-amount">₹0.00</span></p>
+                                <p><strong>Total Amount: <span id="total-amount">₹0.00</span></strong></p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <div class="text-right mt-20">
+                    <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Save Invoice</button>
+                    <a href="index.html" class="btn" style="background-color: #6c757d;">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </main>
+
+    <footer class="app-footer">
+        <p>© <span id="year"></span> Sai Billing. All rights reserved.</p>
+    </footer>
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script src="js/config.js"></script>
+    <script src="js/firestoreService.js"></script>
+    <script src="js/app.js" defer></script>
+</body>
+</html>
