@@ -10,17 +10,6 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase
-try {
-    if (typeof firebase !== 'undefined' && typeof firebase.initializeApp === 'function') {
-        if (firebase.apps.length === 0) { // Check if Firebase hasn't been initialized yet
-            firebase.initializeApp(firebaseConfig);
-            console.log("Firebase Initialized successfully in config.js");
-        } else {
-            // console.log("Firebase already initialized."); // Default app already exists
-        }
-    } else {
-        console.error("Firebase object or initializeApp function not found. Ensure Firebase SDKs (firebase-app.js) are loaded before config.js.");
-    }
-} catch (e) {
-    console.error("Error initializing Firebase in config.js:", e);
-}
+const app = firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+const auth = firebase.auth(); // Make sure auth is initialized and

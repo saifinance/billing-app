@@ -1,65 +1,58 @@
-// js/firestoreService.js
+// public/js/firestoreService.js
 
-function getDbInstance() {
-    if (firebase && firebase.apps.length > 0 && typeof firebase.firestore === 'function') {
-        return firebase.firestore();
-    } else {
-        console.error("Firebase not initialized or Firestore module not available when trying to get DB instance.");
-         // Attempt to initialize if config is available
-        if (typeof firebase !== 'undefined' && typeof firebase.initializeApp === 'function' && typeof firebaseConfig !== 'undefined' && firebase.apps.length === 0) {
-            console.warn("Attempting to initialize Firebase from firestoreService.js as it wasn't initialized before.");
-            firebase.initializeApp(firebaseConfig);
-            if (typeof firebase.firestore === 'function') return firebase.firestore();
-        }
-        alert("Database service is not available. Please try again later.");
-        return null;
+console.log("firestoreService.js STARTING");
+
+async function getNextInvoiceNumber() { // Or getNextBillNumber if you renamed it
+    const user = firebase.auth().currentUser;
+    if (!user) {
+        console.warn("getNextBillNumber called without user. Using fallback.");
+        const year_no_user = new Date().getFullYear();
+        return `BILL-${year_no_user}-LOGIN-REQUIRED`;
     }
-}
-
-async function getNextInvoiceNumber(userId) { // Pass userId if numbering is per user
-    const db = getDbInstance();
-    if (!db) return `INV-${new Date().getFullYear()}-0001`;
-
     const year = new Date().getFullYear();
+    const prefix = `BILL-${year}-`; // Using BILL prefix
     try {
-        // If invoice numbers are global, remove .where('userId', '==', userId)
-        // If per user, keep it and ensure new invoices have userId
         const querySnapshot = await db.collection('invoices')
-                                      .where('userId', '==', userId) // For user-specific sequential numbers
-                                      .orderBy('invoiceNumber', 'desc') // Requires an index if combined with other where
+                                      .where('userId', '==', user.uid)
+                                      .where('invoiceNumber', '>=', prefix + '0000')
+                                      .where('invoiceNumber', '<', prefix + '9999')
+                                      .orderBy('invoiceNumber', 'desc')
                                       .limit(1)
                                       .get();
         if (!querySnapshot.empty) {
-            const lastInvoice = querySnapshot.docs[0].data();
-            // Basic increment; consider a more robust counter for high concurrency
-            const parts = lastInvoice.invoiceNumber.split('-');
-            let nextNum = 1;
-            if (parts.length > 1) {
-                 const numPart = parseInt(parts[parts.length -1], 10);
-                 if (!isNaN(numPart)) nextNum = numPart + 1;
+            const lastBill = querySnapshot.docs[0].data();
+            if (lastBill.invoiceNumber && lastBill.invoiceNumber.startsWith(prefix)) {
+                const lastNumStr = lastBill.invoiceNumber.substring(prefix.length);
+                if (!isNaN(parseInt(lastNumStr, 10))) {
+                    const nextNum = parseInt(lastNumStr, 10) + 1;
+                    return `${prefix}${String(nextNum).padStart(4, '0')}`;
+                }
             }
-            return `INV-${year}-${String(nextNum).padStart(4, '0')}`; // Example: INV-2023-0001
         }
-        return `INV-${year}-0001`;
+        return `${prefix}0001`;
     } catch (error) {
-        console.error("Error getting next invoice number:", error);
-        return `INV-${year}-0001`; // Fallback
+        console.error("Error getting next bill number:", error);
+        return `BILL-${year}-ERR`;
     }
 }
 
-async function saveInvoice(invoiceData, invoiceId = null) { // invoiceData should include userId
-    const db = getDbInstance();
-    if (!db) throw new Error("Firestore not available");
+// *******************************************************************
+// ****** ADD THE FOLLOWING MISSING FUNCTIONS STARTING FROM HERE ******
+// *******************************************************************
 
-    if (!invoiceData.userId) {
-        console.error("Attempting to save invoice without userId!");
-        throw new Error("User ID is missing from invoice data.");
+async function saveInvoice(invoiceData, invoiceId = null) {
+    const user = firebase.auth().currentUser;
+    if (!user) {
+        console.error('SaveInvoice: User not logged in!');
+        throw new Error('You must be logged in to save an invoice.');
     }
+    invoiceData.userId = user.uid; // Associate invoice with the logged-in user
 
     try {
         invoiceData.updatedAt = firebase.firestore.FieldValue.serverTimestamp();
         if (invoiceId) {
-            await db.collection('invoices').doc(invoiceId).update(invoiceData);
+            const docRef = db.collection('invoices').doc(invoiceId);
+            await docRef.set(invoiceData, { merge: true });
             console.log('Invoice updated successfully: ', invoiceId);
             return invoiceId;
         } else {
@@ -69,72 +62,83 @@ async function saveInvoice(invoiceData, invoiceId = null) { // invoiceData shoul
             return docRef.id;
         }
     } catch (error) {
-        console.error('Error saving invoice: ', error);
+        console.error('Error saving invoice in firestoreService:', error);
         throw error;
     }
 }
 
-async function getInvoices(userId) { // Fetch invoices for specific user
-    const db = getDbInstance();
-    if (!db) throw new Error("Firestore not available");
-
+async function getInvoices() {
+    const user = firebase.auth().currentUser;
+    if (!user) {
+        return [];
+    }
     try {
         const snapshot = await db.collection('invoices')
-                                .where('userId', '==', userId)
-                                .orderBy('createdAt', 'desc')
-                                .get();
+                                 .where('userId', '==', user.uid)
+                                 .orderBy('createdAt', 'desc')
+                                 .get();
         const invoices = [];
-        snapshot.forEach(doc => {
-            invoices.push({ id: doc.id, ...doc.data() });
-        });
+        snapshot.forEach(doc => invoices.push({ id: doc.id, ...doc.data() }));
         return invoices;
     } catch (error) {
-        console.error('Error getting invoices: ', error);
-        throw error;
+        console.error('Error getting invoices:', error);
+        if (error.code === 'permission-denied') {
+            console.warn("Permission denied fetching invoices. Ensure Firestore rules are correct for list operations by authenticated users.");
+        }
+        return [];
     }
 }
 
-async function getInvoiceById(invoiceId, userId) { // Ensure user can only get their own invoice
-    const db = getDbInstance();
-    if (!db) throw new Error("Firestore not available");
-
+async function getInvoiceById(invoiceId) { // Or getBillById if you rename
+    const user = firebase.auth().currentUser;
+    if (!user) {
+        return null;
+    }
     try {
         const doc = await db.collection('invoices').doc(invoiceId).get();
-        if (doc.exists) {
-            const invoiceData = doc.data();
-            if (invoiceData.userId === userId) { // Security check
-                return { id: doc.id, ...invoiceData };
-            } else {
-                console.warn("User attempted to access an unauthorized invoice.");
-                return null; // Or throw an error
-            }
+        if (doc.exists && doc.data().userId === user.uid) {
+            return { id: doc.id, ...doc.data() };
+        } else if (doc.exists && doc.data().userId !== user.uid) {
+            console.warn('Permission denied: User does not own this invoice/bill.');
+            return null;
         } else {
-            console.log('No such invoice found!');
+            console.log('No such invoice/bill found or user mismatch.');
             return null;
         }
     } catch (error) {
-        console.error('Error getting invoice by ID: ', error);
+        console.error('Error getting invoice/bill by ID:', error);
+        return null;
+    }
+}
+
+async function deleteInvoice(invoiceId) { // Or deleteBill if you rename
+    const user = firebase.auth().currentUser;
+    if (!user) {
+        throw new Error("Authentication required to delete.");
+    }
+    try {
+        const docRef = db.collection('invoices').doc(invoiceId);
+        const doc = await docRef.get();
+        if (doc.exists && doc.data().userId === user.uid) {
+            await docRef.delete();
+            console.log('Invoice/Bill deleted successfully: ', invoiceId);
+        } else {
+            throw new Error("Permission denied or invoice/bill not found.");
+        }
+    } catch (error) {
+        console.error('Error deleting invoice/bill:', error);
         throw error;
     }
 }
 
-async function deleteInvoice(invoiceId, userId) { // Ensure user can only delete their own
-    const db = getDbInstance();
-    if (!db) throw new Error("Firestore not available");
-    // It's better to rely on Firestore rules for security, but client-side check is good too.
-    // For deletion, rules are primary. This function might just call delete if rules allow.
-    try {
-        // Optional: Fetch doc first to check userId if rules aren't perfectly restrictive on delete.
-        // const doc = await db.collection('invoices').doc(invoiceId).get();
-        // if (doc.exists && doc.data().userId === userId) {
-        await db.collection('invoices').doc(invoiceId).delete();
-        console.log('Invoice deleted successfully: ', invoiceId);
-        // } else {
-        //     console.warn("Unauthorized attempt to delete invoice or invoice not found.");
-        //     throw new Error("Unauthorized or invoice not found.");
-        // }
-    } catch (error) {
-        console.error('Error deleting invoice: ', error);
-        throw error;
-    }
+// *******************************************************************
+// ****** END OF MISSING FUNCTIONS ***********************************
+// *******************************************************************
+
+
+console.log("firestoreService.js FINISHED");
+if (typeof saveInvoice === 'function') {
+    console.log("saveInvoice IS a function in firestoreService.js global scope AFTER definition.");
+} else {
+    console.error("saveInvoice IS UNDEFINED in firestoreService.js global scope AFTER definition.");
 }

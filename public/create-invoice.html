@@ -14,119 +14,108 @@
             <a href="index.html" class="logo-text">SaiBilling</a>
             <nav class="app-nav">
                  <ul>
-                    <li><a href="index.html" class="nav-link" data-page="index">Dashboard</a></li>
-                    <li><a href="create-invoice.html" class="nav-link active" data-page="create-invoice">Create Invoice</a></li>
-                    <!-- <li><a href="settings.html" class="nav-link" data-page="settings">Settings</a></li> -->
+                    <li><a href="index.html" id="nav-dashboard">Dashboard</a></li>
+                    <li><a href="create-invoice.html" id="nav-create-invoice" class="active">Create Invoice</a></li>
+                    <li id="auth-container">
+                        <a href="#" id="signin-link" style="display: none;">Sign In</a>
+                        <span id="user-email-display" style="display: none; color: var(--medium-text-color); font-weight: normal; padding: 5px 0;"></span>
+                        <a href="#" id="signout-link" style="display: none;">Sign Out</a>
+                    </li>
                 </ul>
             </nav>
-            <div>
-                <span id="user-email-display" style="margin-right: 15px; color: var(--medium-text-color);"></span>
-                <button id="logout-btn" class="btn btn-secondary" style="display: none;">Logout</button>
-            </div>
         </div>
     </header>
 
-    <main id="main-content"> <!-- Added ID for content protection -->
-        <div class="container">
-            <h1>Create New Invoice</h1>
+    <!-- AUTH MODAL (Shared) -->
+    <div id="auth-modal" class="auth-modal-backdrop">
+        <div id="auth-modal-content" class="auth-modal-content-box">
+            <button type="button" class="btn-close-modal">×</button>
+            <form id="signin-form" style="display:block;">
+                <h2>Sign In</h2>
+                <div class="form-group"><label for="signin-email">Email:</label><input type="email" id="signin-email" required></div>
+                <div class="form-group"><label for="signin-password">Password:</label><input type="password" id="signin-password" required></div>
+                <button type="submit" class="btn btn-primary">Sign In</button>
+                <p id="signin-error" class="error-message"></p>
+                <p class="auth-switch-link">Don't have an account? <a href="#" id="show-signup-form-link">Sign Up</a></p>
+            </form>
+            <form id="signup-form" style="display:none;">
+                 <h2>Sign Up</h2>
+                <div class="form-group"><label for="signup-email">Email:</label><input type="email" id="signup-email" required></div>
+                <div class="form-group"><label for="signup-password">Password (min. 6 characters):</label><input type="password" id="signup-password" minlength="6" required></div>
+                <button type="submit" class="btn btn-primary">Sign Up</button>
+                <p id="signup-error" class="error-message"></p>
+                <p class="auth-switch-link">Already have an account? <a href="#" id="show-signin-form-link">Sign In</a></p>
+            </form>
+        </div>
+    </div>
+
+    <main>
+        <div class="container main-content-area" style="visibility: hidden;"> <!-- Hidden initially -->
+            <h1 id="page-title">Create New Invoice</h1>
             <form id="invoice-form">
-                <input type="hidden" id="invoice-id"> <!-- For editing -->
+                <input type="hidden" id="invoice-id">
 
                 <section class="form-section">
                     <h2>Client Information</h2>
                     <div class="form-grid">
-                        <div class="form-group">
-                            <label for="client-name">Client Name*</label>
-                            <input type="text" id="client-name" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="client-email">Client Email</label>
-                            <input type="email" id="client-email">
-                        </div>
-                        <div class="form-group">
-                            <label for="client-phone">Client Phone</label>
-                            <input type="text" id="client-phone">
-                        </div>
-                        <div class="form-group">
-                            <label for="client-address">Client Address</label>
-                            <textarea id="client-address"></textarea>
-                        </div>
+                        <div class="form-group"><label for="client-name">Client Name*</label><input type="text" id="client-name" required></div>
+                        <div class="form-group"><label for="client-email">Client Email</label><input type="email" id="client-email"></div>
+                        <div class="form-group"><label for="client-phone">Client Phone</label><input type="text" id="client-phone"></div>
+                        <div class="form-group"><label for="client-address">Client Address</label><textarea id="client-address"></textarea></div>
                     </div>
                 </section>
 
                 <section class="form-section">
                     <h2>Invoice Details</h2>
                     <div class="form-grid">
-                        <div class="form-group">
-                            <label for="invoice-number">Invoice Number*</label>
-                            <input type="text" id="invoice-number" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="invoice-date">Invoice Date*</label>
-                            <input type="date" id="invoice-date" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="due-date">Due Date*</label>
-                            <input type="date" id="due-date" required>
-                        </div>
-                         <div class="form-group">
-                            <label for="invoice-status">Status</label>
-                            <select id="invoice-status">
-                                <option value="Draft">Draft</option>
-                                <option value="Sent">Sent</option>
-                                <option value="Paid">Paid</option>
-                                <option value="Overdue">Overdue</option>
-                                <option value="Cancelled">Cancelled</option>
-                            </select>
-                        </div>
+                        <div class="form-group"><label for="invoice-number">Invoice Number*</label><input type="text" id="invoice-number" readonly required></div> <!-- Readonly, JS will fill -->
+                        <div class="form-group"><label for="invoice-date">Invoice Date*</label><input type="date" id="invoice-date" required></div>
+                        <div class="form-group"><label for="due-date">Due Date*</label><input type="date" id="due-date" required></div>
+                        <div class="form-group"><label for="invoice-status">Status</label><select id="invoice-status"><option value="Draft" selected>Draft</option><option value="Sent">Sent</option><option value="Paid">Paid</option><option value="Overdue">Overdue</option><option value="Cancelled">Cancelled</option></select></div>
+                    </div>
+                </section>
+
+                <section class="form-section">
+                    <h2>Select Service Package</h2>
+                    <div class="form-group">
+                        <label for="service-package">Choose Loan Type (to pre-fill common items):</label>
+                        <select id="service-package"><option value="">-- Select a Loan Type --</option><option value="home_loan">Home Loan</option><option value="mortgage_loan">Mortgage Loan</option><option value="business_loan">Business Loan</option><option value="personal_loan">Personal Loan</option><option value="agri_loan">Agricultural Loan</option><option value="lap_loan">Loan Against Property</option><option value="other_custom">Other / Custom (Manual Entry)</option></select>
                     </div>
                 </section>
 
                 <section class="form-section">
                     <h2>Invoice Items</h2>
-                    <div class="table-wrapper">
-                        <table id="invoice-items-table">
-                            <thead>
-                                <tr>
-                                    <th>Description*</th>
-                                    <th>Qty*</th>
-                                    <th>Unit Price (₹)*</th>
-                                    <th>Amount (₹)</th>
-                                    <th>Action</th>
-                                </tr>
-                            </thead>
-                            <tbody id="invoice-item-lines">
-                                <!-- Item lines will be added here by JavaScript -->
-                            </tbody>
-                        </table>
-                    </div>
-                    <button type="button" id="add-item-btn" class="btn btn-secondary mt-20"><i class="fas fa-plus"></i> Add Item</button>
+                    <div class="table-wrapper"><table id="invoice-items-table"><thead><tr><th>Description*</th><th>Qty*</th><th>Unit Price (₹)*</th><th>Amount (₹)</th><th>Action</th></tr></thead><tbody id="invoice-item-lines"></tbody></table></div>
+                    <button type="button" id="add-item-btn" class="btn btn-secondary mt-20"><i class="fas fa-plus"></i> Add Item Manually</button>
                 </section>
 
                 <section class="form-section">
                     <h2>Summary & Notes</h2>
                     <div class="form-grid">
-                        <div class="form-group">
-                            <label for="notes">Notes / Payment Instructions</label>
-                            <textarea id="notes" placeholder="e.g., Bank details, UPI ID"></textarea>
-                        </div>
+                        <div class="form-group"><label for="notes">Notes / Payment Instructions</label><textarea id="notes" placeholder="e.g., Bank details, UPI ID. Default details will be added if empty."></textarea></div>
                         <div>
                             <div class="total-section">
                                 <p>Subtotal: <span id="subtotal">₹0.00</span></p>
-                                <div class="form-group checkbox-group">
-                                    <input type="checkbox" id="apply-gst">
-                                    <label for="apply-gst" style="margin-bottom:0;">Apply GST</label>
-                                    <input type="number" id="gst-rate" value="18" min="0" step="0.01" style="width: 70px; display: none;" placeholder="Rate %">
+                                <div class="form-group checkbox-group"><input type="checkbox" id="apply-intra-state-gst"><label for="apply-intra-state-gst" style="margin-bottom:0;">Apply CGST/SGST (Intra-State)</label></div>
+                                <div id="gst-inputs-container" style="display: none; margin-left: 20px;">
+                                    <div class="form-group d-flex align-center" style="gap: 5px; margin-bottom: 5px;"><label for="cgst-rate" style="margin-bottom:0; white-space: nowrap; font-weight: normal;">CGST (%):</label><input type="number" id="cgst-rate" value="9" min="0" step="0.01" style="width: 70px; padding: 0.3rem;" placeholder="Rate"></div>
+                                    <div class="form-group d-flex align-center" style="gap: 5px; margin-bottom: 5px;"><label for="sgst-rate" style="margin-bottom:0; white-space: nowrap; font-weight: normal;">SGST (%):</label><input type="number" id="sgst-rate" value="9" min="0" step="0.01" style="width: 70px; padding: 0.3rem;" placeholder="Rate"></div>
                                 </div>
-                                <p style="display: none;" id="gst-amount-display">GST Amount: <span id="gst-amount">₹0.00</span></p>
+                                <p style="display: none;" id="cgst-amount-display">CGST Amount: <span id="cgst-amount">₹0.00</span></p>
+                                <p style="display: none;" id="sgst-amount-display">SGST Amount: <span id="sgst-amount">₹0.00</span></p>
                                 <p><strong>Total Amount: <span id="total-amount">₹0.00</span></strong></p>
                             </div>
                         </div>
                     </div>
                 </section>
 
-                <div class="text-right mt-20">
-                    <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Save Invoice</button>
+                <section class="form-section" id="qr-code-section-display" style="margin-top: 20px; text-align: center; border-top: 1px solid var(--border-color); padding-top: 20px;">
+                    <h3>Scan to Pay (GPay)</h3>
+                    <div class="upi-qr-placeholder"><img src="images/gpay-qr-placeholder.png" alt="GPay QR Code Placeholder" style="width: 160px; height: 160px; border: 1px dashed #999; padding: 5px; margin-top: 5px; background-color: #f9f9f9;"><p id="qr-upi-id-text" style="font-size: 0.9em; margin-top: 8px;">(UPI ID: YOUR_UPI_ID_HERE)</p></div>
+                </section>
+
+                <div class="text-right mt-20" style="padding-bottom: 30px;">
+                    <button type="submit" id="save-invoice-btn" class="btn btn-primary" disabled><i class="fas fa-lock"></i> Sign in to Save</button>
                     <a href="index.html" class="btn" style="background-color: #6c757d;">Cancel</a>
                 </div>
             </form>

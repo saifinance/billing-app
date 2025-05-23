@@ -7,92 +7,64 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/invoice-view.css">
 </head>
 <body>
-    <header class="app-header no-print">
+    <header class="app-header">
         <div class="header-container">
             <a href="index.html" class="logo-text">SaiBilling</a>
             <nav class="app-nav">
                 <ul>
-                    <li><a href="index.html" class="nav-link" data-page="index">Dashboard</a></li>
-                    <li><a href="create-invoice.html" class="nav-link" data-page="create-invoice">Create Invoice</a></li>
+                    <li><a href="index.html" id="nav-dashboard">Dashboard</a></li>
+                    <li><a href="create-invoice.html" id="nav-create-invoice">Create Invoice</a></li>
+                    <li id="auth-container">
+                        <a href="#" id="signin-link" style="display: none;">Sign In</a>
+                        <span id="user-email-display" style="display: none; color: var(--medium-text-color); font-weight: normal; padding: 5px 0;"></span>
+                        <a href="#" id="signout-link" style="display: none;">Sign Out</a>
+                    </li>
                 </ul>
             </nav>
-            <div>
-                <span id="user-email-display" style="margin-right: 15px; color: var(--medium-text-color);"></span>
-                <button id="logout-btn" class="btn btn-secondary" style="display: none;">Logout</button>
-            </div>
         </div>
     </header>
 
-    <main id="main-content">
-        <div class="container invoice-view-container">
-            <div class="invoice-header mb-20">
-                <div class="company-details">
-                    <!-- Populated by JS from settings later -->
-                    <h1 id="view-company-name" style="font-size: 1.8em; color: var(--primary-color);">Your Company Name</h1>
-                    <p id="view-company-address">123 Main Street, City, Country</p>
-                    <p id="view-company-contact">Phone: (123) 456-7890 | Email: company@example.com</p>
-                    <p id="view-company-gstin">GSTIN: YOURGSTIN12345</p>
-                </div>
-                <div class="invoice-title-section text-right">
-                    <h2 style="font-size: 1.5em;">INVOICE</h2>
-                    <p><strong>Invoice #:</strong> <span id="view-invoice-number">Loading...</span></p>
-                    <p><strong>Date:</strong> <span id="view-invoice-date">Loading...</span></p>
-                    <p><strong>Due Date:</strong> <span id="view-due-date">Loading...</span></p>
-                </div>
+    <!-- AUTH MODAL (Shared) -->
+    <div id="auth-modal" class="auth-modal-backdrop">
+        <div id="auth-modal-content" class="auth-modal-content-box">
+            <button type="button" class="btn-close-modal">×</button>
+            <form id="signin-form" style="display:block;">
+                <h2>Sign In</h2>
+                <div class="form-group"><label for="signin-email">Email:</label><input type="email" id="signin-email" required></div>
+                <div class="form-group"><label for="signin-password">Password:</label><input type="password" id="signin-password" required></div>
+                <button type="submit" class="btn btn-primary">Sign In</button>
+                <p id="signin-error" class="error-message"></p>
+                <p class="auth-switch-link">Don't have an account? <a href="#" id="show-signup-form-link">Sign Up</a></p>
+            </form>
+            <form id="signup-form" style="display:none;">
+                 <h2>Sign Up</h2>
+                <div class="form-group"><label for="signup-email">Email:</label><input type="email" id="signup-email" required></div>
+                <div class="form-group"><label for="signup-password">Password (min. 6 characters):</label><input type="password" id="signup-password" minlength="6" required></div>
+                <button type="submit" class="btn btn-primary">Sign Up</button>
+                <p id="signup-error" class="error-message"></p>
+                <p class="auth-switch-link">Already have an account? <a href="#" id="show-signin-form-link">Sign In</a></p>
+            </form>
+        </div>
+    </div>
+
+    <main>
+        <div class="container main-content-area" style="visibility: hidden;"> <!-- Hidden initially -->
+            <div class="invoice-actions-bar" style="margin-bottom: 20px; text-align: right;">
+                <button id="print-invoice-btn" class="btn btn-secondary"><i class="fas fa-print"></i> Print Invoice</button>
+                <a id="edit-invoice-link" href="#" class="btn btn-secondary" style="margin-left:10px; display:none;"><i class="fas fa-edit"></i> Edit Invoice</a>
+                <a href="index.html" class="btn" style="background-color: #6c757d; margin-left:10px;">Back to Dashboard</a>
             </div>
 
-            <hr class="mb-20">
-
-            <div class="client-details-section mb-20">
-                <h3>Bill To:</h3>
-                <p id="view-client-name">Client Name</p>
-                <p id="view-client-address">Client Address</p>
-                <p id="view-client-phone">Client Phone</p>
-                <p id="view-client-email">Client Email</p>
-            </div>
-
-            <div class="table-wrapper">
-                <table id="view-invoice-items-table">
-                    <thead>
-                        <tr>
-                            <th>Description</th>
-                            <th>Qty</th>
-                            <th>Unit Price (₹)</th>
-                            <th>Amount (₹)</th>
-                        </tr>
-                    </thead>
-                    <tbody id="view-invoice-item-lines">
-                        <!-- Item lines will be loaded here -->
-                    </tbody>
-                </table>
-            </div>
-
-            <div class="invoice-summary-section mt-20 text-right">
-                <p><strong>Subtotal:</strong> <span id="view-subtotal">₹0.00</span></p>
-                <div id="view-gst-details" style="display:none;">
-                    <p>SGST (<span id="view-sgst-rate">0</span>%): <span id="view-sgst-amount">₹0.00</span></p>
-                    <p>CGST (<span id="view-cgst-rate">0</span>%): <span id="view-cgst-amount">₹0.00</span></p>
-                    <p>IGST (<span id="view-igst-rate">0</span>%): <span id="view-igst-amount">₹0.00</span></p> <!-- For inter-state -->
-                </div>
-                <h3><strong>Total Amount:</strong> <span id="view-total-amount">₹0.00</span></h3>
-            </div>
-
-            <div class="invoice-notes-section mt-20">
-                <h4>Notes:</h4>
-                <p id="view-notes" style="white-space: pre-wrap;">Invoice notes will appear here.</p>
-            </div>
-
-            <div class="invoice-actions mt-20 text-center no-print">
-                <button id="print-invoice-btn" class="btn btn-primary"><i class="fas fa-print"></i> Print Invoice</button>
-                <!-- <button id="download-pdf-btn" class="btn btn-secondary"><i class="fas fa-file-pdf"></i> Download PDF</button> -->
-                <a href="index.html" class="btn" style="background-color: #6c757d;">Back to Dashboard</a>
+            <div id="invoice-view-area" class="invoice-paper">
+                <p style="text-align:center; padding: 50px;">Please sign in to view invoice details.</p>
             </div>
         </div>
     </main>
 
-    <footer class="app-footer no-print">
+    <footer class="app-footer">
         <p>© <span id="year"></span> Sai Billing. All rights reserved.</p>
     </footer>
 
@@ -103,6 +75,6 @@
     <script src="js/config.js"></script>
     <script src="js/auth.js"></script>
     <script src="js/firestoreService.js"></script>
-    <script src="js/app.js" defer></script>
+    <script src="js/view-invoice-app.js" defer></script>
 </body>
 </html>

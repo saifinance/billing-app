@@ -275,3 +275,111 @@ tbody tr:hover { background-color: #f1f1f1; }
         margin: 15px 0 !important;
     }
 }
+
+
+/* Error Message Styling for Forms */
+.error-message {
+    color: var(--error-color, #dc3545);
+    font-size: 0.85em;
+    margin-top: 5px;
+    min-height: 1em;
+    text-align: left;
+}
+
+/* Styling for Auth Modal */
+.auth-modal-backdrop {
+    display: none; /* Initially hidden, JS will change to 'flex' */
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.6);
+    z-index: 2000;
+    justify-content: center;
+    align-items: center;
+    padding: 20px; /* For smaller screens */
+}
+
+.auth-modal-content-box {
+    background: var(--white-color);
+    padding: 30px 35px;
+    border-radius: var(--border-radius);
+    box-shadow: 0 5px 20px rgba(0,0,0,0.25);
+    width: 100%;
+    max-width: 400px;
+    position: relative;
+    text-align: left;
+}
+
+.auth-modal-content-box .btn-close-modal {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    background: none;
+    border: none;
+    font-size: 1.8rem;
+    line-height: 1;
+    color: #888;
+    cursor: pointer;
+    padding: 5px;
+}
+.auth-modal-content-box .btn-close-modal:hover {
+    color: #333;
+}
+
+.auth-modal-content-box h2 {
+    text-align: center;
+    margin-bottom: 25px;
+    color: var(--primary-color);
+    font-size: 1.6rem;
+}
+
+.auth-modal-content-box .form-group {
+    margin-bottom: 18px;
+}
+.auth-modal-content-box .form-group label {
+    font-weight: 600;
+    display: block;
+    margin-bottom: 6px;
+}
+.auth-modal-content-box input[type="email"],
+.auth-modal-content-box input[type="password"] {
+    width: 100%;
+    padding: 0.75rem; /* Slightly more padding */
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    font-size: 1rem;
+}
+.auth-modal-content-box .btn-primary {
+    width: 100%;
+    margin-top: 10px;
+    padding: 0.75rem;
+    font-size: 1rem;
+}
+.auth-modal-content-box .auth-switch-link { /* Class for "Don't have an account?" text */
+    margin-top: 20px;
+    font-size: 0.9em;
+    text-align: center;
+}
+.auth-modal-content-box .auth-switch-link a {
+    color: var(--secondary-color);
+    text-decoration: underline;
+    font-weight: 600;
+}
+.auth-modal-content-box .auth-switch-link a:hover {
+    color: var(--primary-color);
+}
+
+
+/* Status Spans */
+.status-draft { background-color: #6c757d; color: white; padding: 3px 8px; border-radius: 3px; font-size: 0.85em; display: inline-block; }
+.status-sent { background-color: #17a2b8; color: white; padding: 3px 8px; border-radius: 3px; font-size: 0.85em; display: inline-block; }
+.status-paid { background-color: #28a745; color: white; padding: 3px 8px; border-radius: 3px; font-size: 0.85em; display: inline-block; }
+.status-overdue { background-color: #ffc107; color: #212529; padding: 3px 8px; border-radius: 3px; font-size: 0.85em; display: inline-block; }
+.status-cancelled { background-color: #dc3545; color: white; padding: 3px 8px; border-radius: 3px; font-size: 0.85em; display: inline-block; }
+
+/* Spinner for buttons */
+.fa-spinner.fa-spin {
+    margin-right: 5px;
+}

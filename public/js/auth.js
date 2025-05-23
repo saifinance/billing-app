@@ -1,88 +1,210 @@
-// js/auth.js
+// public/js/auth.js
 
-function getAuthInstance() {
-    // Ensure Firebase app is initialized and auth is available
-    if (firebase && firebase.apps.length > 0 && typeof firebase.auth === 'function') {
-        return firebase.auth();
-    } else {
-        console.error("Firebase not initialized or Auth module not available when trying to get Auth instance.");
-        // Attempt to initialize if config is available, this is a fallback
-        if (typeof firebase !== 'undefined' && typeof firebase.initializeApp === 'function' && typeof firebaseConfig !== 'undefined' && firebase.apps.length === 0) {
-            console.warn("Attempting to initialize Firebase from auth.js as it wasn't initialized before.");
-            firebase.initializeApp(firebaseConfig);
-            if (typeof firebase.auth === 'function') return firebase.auth();
+// --- DOM Element Cache ---
+let signinLink, signoutLink, userEmailDisplay, authModal, authModalContent,
+    signinForm, signupForm, closeAuthModalBtns,
+    signinErrorP, signupErrorP, showSignupFormLink, showSigninFormLink,
+    navCreateInvoiceLink, saveInvoiceBtn, mainContentAreas, createNewInvoiceBtnDashboard;
+
+function cacheAuthDOMElements() {
+    signinLink = document.getElementById('signin-link');
+    signoutLink = document.getElementById('signout-link');
+    userEmailDisplay = document.getElementById('user-email-display');
+    authModal = document.getElementById('auth-modal');
+    authModalContent = document.getElementById('auth-modal-content');
+    signinForm = document.getElementById('signin-form');
+    signupForm = document.getElementById('signup-form');
+    closeAuthModalBtns = document.querySelectorAll('.btn-close-modal');
+    signinErrorP = document.getElementById('signin-error');
+    signupErrorP = document.getElementById('signup-error');
+    showSignupFormLink = document.getElementById('show-signup-form-link');
+    showSigninFormLink = document.getElementById('show-signin-form-link');
+    navCreateInvoiceLink = document.getElementById('nav-create-invoice');
+    saveInvoiceBtn = document.getElementById('save-invoice-btn');
+    mainContentAreas = document.querySelectorAll('.main-content-area');
+    createNewInvoiceBtnDashboard = document.getElementById('btn-create-new-invoice'); // Button on dashboard
+}
+
+
+// --- UI Update Logic ---
+function updateAuthUI(user, isInitialLoad = false) {
+    if (!signinLink) cacheAuthDOMElements();
+
+    mainContentAreas.forEach(area => area.style.visibility = 'visible');
+
+    if (user) {
+        if (userEmailDisplay) { userEmailDisplay.textContent = user.email; userEmailDisplay.style.display = 'inline'; }
+        if (signinLink) signinLink.style.display = 'none';
+        if (signoutLink) signoutLink.style.display = 'inline';
+        if (authModal && authModal.style.display !== 'none') closeAuthModal();
+        if (navCreateInvoiceLink) navCreateInvoiceLink.style.display = 'inline-block';
+        if (createNewInvoiceBtnDashboard) createNewInvoiceBtnDashboard.style.display = 'inline-flex';
+
+
+        if (saveInvoiceBtn && window.location.pathname.includes('create-invoice.html')) {
+            saveInvoiceBtn.disabled = false;
+            saveInvoiceBtn.innerHTML = '<i class="fas fa-save"></i> ' + (document.getElementById('invoice-id')?.value ? 'Update Invoice' : 'Save Invoice');
         }
-        alert("Authentication service is not available. Please try again later.");
-        return null;
+    } else {
+        if (userEmailDisplay) userEmailDisplay.style.display = 'none';
+        if (signinLink) signinLink.style.display = 'inline';
+        if (signoutLink) signoutLink.style.display = 'none';
+        if (createNewInvoiceBtnDashboard) createNewInvoiceBtnDashboard.style.display = 'none'; // Hide if not logged in
+
+
+        const currentPath = window.location.pathname;
+        // Show modal immediately if on a page that requires auth and it's the initial check
+        const isPotentiallyProtectedPage = currentPath.includes('create-invoice.html') ||
+                                       currentPath.includes('view-invoice.html') ||
+                                       currentPath.includes('index.html') || // Dashboard also requires login to see invoices
+                                       currentPath === '/' || currentPath.endsWith('/billing-app/') || currentPath.endsWith('/billing-app');
+
+
+        if (isPotentiallyProtectedPage && isInitialLoad) {
+            openAuthModal('signin');
+        }
+
+        if (saveInvoiceBtn && currentPath.includes('create-invoice.html')) {
+            saveInvoiceBtn.disabled = true;
+            saveInvoiceBtn.innerHTML = '<i class="fas fa-lock"></i> Sign in to Save';
+        }
+        if (navCreateInvoiceLink) navCreateInvoiceLink.style.display = 'inline-block'; // Keep nav link visible
     }
 }
 
-// Sign Up New User
-async function signUpUser(email, password) {
-    const auth = getAuthInstance();
-    if (!auth) return Promise.reject(new Error("Auth service not available"));
+// --- Modal and Form Switching ---
+function openAuthModal(showForm = 'signin') {
+    if (!authModal || !signinForm || !signupForm) cacheAuthDOMElements();
+    if (authModal) authModal.style.display = 'flex';
+    if (showForm === 'signin') {
+        if (signupForm) signupForm.style.display = 'none';
+        if (signinForm) signinForm.style.display = 'block';
+    } else {
+        if (signinForm) signinForm.style.display = 'none';
+        if (signupForm) signupForm.style.display = 'block';
+    }
+    if (signinErrorP) signinErrorP.textContent = '';
+    if (signupErrorP) signupErrorP.textContent = '';
+}
+
+function closeAuthModal() {
+    if (!authModal) cacheAuthDOMElements();
+    if (authModal) authModal.style.display = 'none';
+}
+
+// --- Firebase Auth Actions ---
+async function handleSignIn(e) {
+    e.preventDefault();
+    if (!signinErrorP || !firebase.auth) return;
+    signinErrorP.textContent = '';
+    const email = document.getElementById('signin-email').value;
+    const password = document.getElementById('signin-password').value;
+    const submitButton = signinForm.querySelector('button[type="submit"]');
+    const originalButtonText = submitButton.innerHTML;
+    submitButton.disabled = true;
+    submitButton.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Signing In...`;
     try {
-        const userCredential = await auth.createUserWithEmailAndPassword(email, password);
-        console.log("User signed up:", userCredential.user.uid);
-        return userCredential.user;
+        await firebase.auth().signInWithEmailAndPassword(email, password);
+        if (signinForm) signinForm.reset();
     } catch (error) {
-        console.error("Error signing up:", error.code, error.message);
-        // alert(`Signup Error: ${error.message}`); // More specific error handling in app.js
-        throw error;
+        console.error("Sign in error:", error);
+        signinErrorP.textContent = error.message;
+    } finally {
+        submitButton.disabled = false;
+        submitButton.innerHTML = originalButtonText;
     }
 }
 
-// Login Existing User
-async function loginUser(email, password) {
-    const auth = getAuthInstance();
-    if (!auth) return Promise.reject(new Error("Auth service not available"));
+async function handleSignUp(e) {
+    e.preventDefault();
+    if (!signupErrorP || !firebase.auth) return;
+    signupErrorP.textContent = '';
+    const email = document.getElementById('signup-email').value;
+    const password = document.getElementById('signup-password').value; // Assuming confirm password logic is separate or not critical path for this example
+    const submitButton = signupForm.querySelector('button[type="submit"]');
+    const originalButtonText = submitButton.innerHTML;
+    if (password.length < 6) { signupErrorP.textContent = "Password should be at least 6 characters."; return; }
+    submitButton.disabled = true;
+    submitButton.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Signing Up...`;
     try {
-        const userCredential = await auth.signInWithEmailAndPassword(email, password);
-        console.log("User logged in:", userCredential.user.uid);
-        return userCredential.user;
+        await firebase.auth().createUserWithEmailAndPassword(email, password);
+        if (signupForm) signupForm.reset();
+        openAuthModal('signin'); // Switch to sign-in after successful signup
     } catch (error) {
-        console.error("Error logging in:", error.code, error.message);
-        // alert(`Login Error: ${error.message}`); // More specific error handling in app.js
-        throw error;
+        console.error("Sign up error:", error);
+        signupErrorP.textContent = error.message;
+    } finally {
+        submitButton.disabled = false;
+        submitButton.innerHTML = originalButtonText;
     }
 }
 
-// Logout Current User
-async function logoutUser() {
-    const auth = getAuthInstance();
-    if (!auth) return Promise.reject(new Error("Auth service not available"));
+async function handleSignOut(e) {
+    e.preventDefault();
+    if (!firebase.auth) return;
     try {
-        await auth.signOut();
-        console.log("User logged out");
-        // Redirect handled by onAuthStateChanged in app.js
+        await firebase.auth().signOut();
+        console.log("User signed out");
+        // onAuthStateChanged will update UI.
+        // If on dashboard, it will show "please sign in".
+        // If on create/view, it will also update and potentially show modal via isInitialLoad logic if page re-triggered
+        const path = window.location.pathname;
+        if (path.includes('create-invoice.html') || path.includes('view-invoice.html')) {
+            window.location.href = 'index.html'; // Redirect to dashboard which will then prompt login if needed
+        }
+
     } catch (error) {
-        console.error("Error logging out:", error);
-        alert(`Logout Error: ${error.message}`);
-        throw error;
+        console.error("Sign out error:", error);
+        alert("Error signing out: " + error.message);
     }
 }
 
-// Check Auth State / Get Current User
-function onAuthStateChangedHandler(callback) {
-    const auth = getAuthInstance();
-    if (!auth) {
-        console.warn("Auth service not available for onAuthStateChanged listener.");
-        callback(null); // Assume no user if auth isn't ready
-        return () => {}; // Return a dummy unsubscribe function
+// --- Main Auth Initialization ---
+function initAuth() {
+    if (!firebase.auth) {
+        console.error("Firebase Auth SDK not loaded!");
+        document.querySelectorAll('.main-content-area').forEach(area => area.style.visibility = 'visible');
+        return;
     }
-    return auth.onAuthStateChanged(user => {
-        if (user) {
-            // User is signed in.
-            callback(user);
-        } else {
-            // User is signed out.
-            callback(null);
+    cacheAuthDOMElements();
+    updateAuthUI(null, true); // Initial UI: assume logged out, pass true for isInitialLoad
+
+    firebase.auth().onAuthStateChanged(user => {
+        console.log("Auth state changed. User:", user ? user.uid : 'None');
+        updateAuthUI(user, false);
+
+        const path = window.location.pathname;
+        if (!user) { // If user logs out or session expires
+            const tableBody = document.getElementById('invoices-table-body');
+            if (tableBody && (path.includes('index.html') || path === '/' || path.endsWith('/billing-app/'))) {
+                tableBody.innerHTML = '<tr><td colspan="7" style="text-align: center;">Please sign in to view invoices.</td></tr>';
+            }
+            const invoiceViewArea = document.getElementById('invoice-view-area');
+             if (invoiceViewArea && path.includes('view-invoice.html')) {
+                invoiceViewArea.innerHTML = '<p style="text-align:center; color:red;">Please sign in to view this invoice.</p>';
+            }
+            // For create-invoice.html, save button is disabled by updateAuthUI
+        }
+
+        // Trigger page-specific logic
+        if (path.includes('index.html') || path === '/' || path.endsWith('/billing-app/') || path.endsWith('/billing-app')) {
+            if (typeof loadInvoicesDashboard === 'function') loadInvoicesDashboard();
+        } else if (path.includes('create-invoice.html')) {
+            if (typeof initializeInvoiceForm === 'function') initializeInvoiceForm();
+        } else if (path.includes('view-invoice.html')) {
+            if (typeof initializeViewInvoicePage === 'function') initializeViewInvoicePage();
         }
     });
+
+    if (signinLink) signinLink.addEventListener('click', (e) => { e.preventDefault(); openAuthModal('signin'); });
+    if (showSignupFormLink) showSignupFormLink.addEventListener('click', (e) => { e.preventDefault(); openAuthModal('signup'); });
+    if (showSigninFormLink) showSigninFormLink.addEventListener('click', (e) => { e.preventDefault(); openAuthModal('signin'); });
+    if (closeAuthModalBtns) closeAuthModalBtns.forEach(btn => btn.addEventListener('click', closeAuthModal));
+    if (signinForm) signinForm.addEventListener('submit', handleSignIn);
+    if (signupForm) signupForm.addEventListener('submit', handleSignUp);
+    if (signoutLink) signoutLink.addEventListener('click', handleSignOut);
+    if (authModal) authModal.addEventListener('click', (e) => { if (e.target === authModal) closeAuthModal(); });
 }
 
-function getCurrentUser() {
-    const auth = getAuthInstance();
-    if (!auth) return null;
-    return auth.currentUser;
-}
+if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', initAuth); }
+else { initAuth(); }
