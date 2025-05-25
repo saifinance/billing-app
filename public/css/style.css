@@ -484,6 +484,45 @@ tbody tr:hover { background-color: #f1f1f1; }
         padding: 0.3rem 0.6rem; /* Smaller padding for action buttons */
         font-size: 0.8rem;
     }
+
+    /* Auth elements in active mobile nav */
+    .app-nav.active #auth-container {
+        /* Styles for the <li> itself if needed, e.g., if it's the last child and needs border removed. */
+        /* However, specific children are styled below. */
+    }
+
+    .app-nav.active #auth-container > a, /* Targets #signin-link, #signout-link */
+    .app-nav.active #auth-container > span { /* Targets #user-email-display */
+        display: block; /* Take full width */
+        width: 100%;
+        padding: 10px 15px; /* Adjusted padding */
+        border-bottom: 1px solid var(--border-color); /* Consistent border */
+        text-align: center; /* Center text */
+        box-sizing: border-box;
+        white-space: normal; /* Allow text wrapping */
+        overflow-wrap: break-word; /* Break long words */
+    }
+
+    /* Override inline styles for #user-email-display and apply specific font size */
+    .app-nav.active #user-email-display {
+        color: var(--medium-text-color) !important; /* Ensure this color is applied */
+        font-weight: normal !important; /* Ensure this font-weight is applied */
+        font-size: 0.9em; /* Slightly smaller for potentially long emails */
+        /* Padding and border are handled by the rule above */
+    }
+
+    .app-nav.active #signin-link,
+    .app-nav.active #signout-link {
+        font-size: 1em; /* Standard font size for these links */
+        /* color: var(--dark-text-color); Already handled by .app-nav a */
+    }
+
+    /* Remove border from the last child of #auth-container if #auth-container itself is the last li */
+    /* This complements the general `.app-nav li:last-child a { border-bottom: none; }` */
+    .app-nav.active li#auth-container:last-child > a:last-of-type,
+    .app-nav.active li#auth-container:last-child > span:last-of-type {
+        border-bottom: none;
+    }
 }
 
 /* Action Bar (Dashboard: Title and Button) */
