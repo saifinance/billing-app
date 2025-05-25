@@ -87,6 +87,133 @@ body {
 
 .invoice-footer-view { text-align: center; margin-top: 10mm; padding-top: 5mm; border-top: 1px dashed var(--border-color); font-size: 8pt; color: var(--medium-text-color); }
 
+/* --- Responsive Screen Styles --- */
+
+@media screen and (max-width: 850px) { /* Slightly wider than invoice-paper max-width */
+    .invoice-paper {
+        max-width: 100%; /* Allow it to shrink */
+        margin: 10px; /* Reduce margin on smaller screens */
+        padding: 15px 10px; /* Reduce padding significantly for mobile */
+        font-size: 0.9rem; /* Base font size for mobile view */
+    }
+
+    .invoice-header .company-logo-name h1 {
+        font-size: 2rem; /* Adjust pt to rem/em for screen */
+    }
+    .invoice-header .company-logo-name .company-tagline {
+        font-size: 1rem;
+    }
+    .invoice-header .company-address-contact {
+        font-size: 0.75rem; /* Adjust pt to rem/em */
+        max-width: 50%; /* Allow a bit more space if needed */
+    }
+
+    .invoice-meta-details,
+    .invoice-notes-qr-container {
+        flex-direction: column;
+        gap: 15px; /* Add gap when stacked */
+    }
+
+    .invoice-meta-details > div,
+    .invoice-notes-view,
+    .qr-code-view {
+        width: 100% !important; /* Take full width when stacked */
+        flex-basis: auto !important; /* Reset flex-basis */
+        padding-right: 0 !important; /* Reset padding */
+    }
+    
+    .invoice-meta-details h3 {
+        font-size: 1rem; /* Adjust pt to rem/em */
+    }
+     .invoice-meta-details p {
+        font-size: 0.85rem; /* Adjust pt to rem/em */
+    }
+
+
+    .invoice-items-table-view {
+        font-size: 0.8rem; /* Adjust pt to rem/em */
+        overflow-x: auto; /* Enable horizontal scroll for the table */
+        display: block; /* Required for overflow-x to work on table */
+        width: 100%;
+    }
+    .invoice-items-table-view th,
+    .invoice-items-table-view td {
+        padding: 5px 4px; /* Reduce padding */
+        white-space: nowrap; /* Prevent content from wrapping to keep columns, relies on scroll */
+    }
+    .invoice-items-table-view td.description-cell {
+        white-space: normal; /* Allow description to wrap if it's too long */
+    }
+
+
+    .invoice-summary-container {
+        justify-content: flex-start; /* Align to left on mobile */
+        margin-top: 15px;
+    }
+    .invoice-summary-view {
+        width: 100%; /* Full width for summary on mobile */
+        font-size: 0.9rem; /* Adjust pt to rem/em */
+    }
+    .invoice-summary-view .total-row td {
+        font-size: 1rem; /* Adjust pt to rem/em */
+    }
+
+    .invoice-notes-view h4,
+    .qr-code-view h4 {
+        font-size: 1rem; /* Adjust pt to rem/em */
+    }
+    .invoice-notes-view p,
+    .qr-code-view p {
+        font-size: 0.8rem; /* Adjust pt to rem/em */
+    }
+    .qr-code-view img {
+        width: 100px; /* Adjust mm to px */
+        height: 100px; /* Adjust mm to px */
+    }
+
+    .invoice-footer-view {
+        font-size: 0.75rem; /* Adjust pt to rem/em */
+        margin-top: 15px;
+        padding-top: 10px;
+    }
+}
+
+@media screen and (max-width: 480px) { /* Further refinements for very small screens */
+    .invoice-paper {
+        padding: 10px 5px;
+        font-size: 0.85rem;
+    }
+
+    .invoice-header {
+        flex-direction: column;
+        gap: 10px;
+        align-items: flex-start;
+    }
+    .invoice-header .company-address-contact {
+        text-align: left;
+        max-width: 100%;
+    }
+
+    .invoice-items-table-view th,
+    .invoice-items-table-view td {
+        padding: 4px 3px;
+        font-size: 0.75rem;
+    }
+    
+    /* Specific for the action bar in view-invoice.html (from style.css context, but good to ensure it's handled) */
+    .invoice-actions-bar {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        align-items: stretch; /* Make buttons full width */
+        margin-bottom: 15px;
+    }
+    .invoice-actions-bar .btn {
+        margin-left: 0 !important; /* Reset any margins */
+        width: 100%;
+    }
+}
+
 /* --- PRINT STYLES --- */
 @media print {
     html, body {

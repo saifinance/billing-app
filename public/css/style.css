@@ -383,3 +383,123 @@ tbody tr:hover { background-color: #f1f1f1; }
 .fa-spinner.fa-spin {
     margin-right: 5px;
 }
+
+/* --- Responsive Design --- */
+.nav-toggle {
+    display: none; /* Hidden by default */
+    background: none;
+    border: none;
+    color: var(--primary-color);
+    font-size: 1.8rem;
+    cursor: pointer;
+    padding: 5px;
+    margin-left: auto; /* Push to the right if logo is only other item */
+}
+
+@media (max-width: 768px) {
+    .header-container {
+        /* Allow nav toggle to be part of the flex flow */
+    }
+
+    .app-nav {
+        position: absolute;
+        top: 60px; /* Height of the header */
+        left: 0;
+        width: 100%;
+        background-color: var(--white-color);
+        box-shadow: var(--shadow-sm);
+        transform: translateY(-150%); /* Start off-screen */
+        transition: transform 0.3s ease-in-out;
+        z-index: 999; /* Below header but above content */
+    }
+
+    .app-nav.active { /* Class to be toggled by JS */
+        transform: translateY(0);
+    }
+
+    .app-nav ul {
+        flex-direction: column;
+        align-items: center;
+        padding: 15px 0;
+        gap: 0;
+    }
+
+    .app-nav li {
+        width: 100%;
+        text-align: center;
+    }
+
+    .app-nav a {
+        display: block;
+        padding: 12px 15px;
+        border-bottom: 1px solid var(--border-color); /* Separator for items */
+        width: 100%;
+    }
+    .app-nav a.active, .app-nav a:hover {
+        border-bottom: 1px solid var(--accent-pink-color); /* Keep consistent active style */
+        background-color: #f9f9f9; /* Slight hover/active background for mobile */
+    }
+    .app-nav li:last-child a {
+        border-bottom: none;
+    }
+
+    .nav-toggle {
+        display: block; /* Show hamburger */
+    }
+
+    /* Invoices Table (Dashboard) adjustments */
+    .table-wrapper {
+        /* overflow-x: auto; is already set, which is good */
+    }
+    th, td { /* Applied to all tables, can be made more specific if needed */
+        padding: 10px 8px; /* Reduce padding */
+        font-size: 0.9rem; /* Slightly smaller font */
+    }
+    /* Example for hiding columns on very small screens (adjust as needed):
+       @media (max-width: 480px) {
+         table th:nth-child(3), table td:nth-child(3), / Client Name /
+         table th:nth-child(4), table td:nth-child(4) { / Due Date /
+           display: none;
+         }
+       }
+    */
+
+    /* Responsive adjustments for Invoice Items table */
+    #invoice-items-table th,
+    #invoice-items-table td {
+        padding: 6px 4px; /* Further reduce padding for this specific table */
+        font-size: 0.85rem; /* Further reduce font size */
+        vertical-align: middle; /* Ensure vertical alignment is consistent */
+    }
+
+    #invoice-items-table input[type="text"],
+    #invoice-items-table input[type="number"],
+    #invoice-items-table select {
+        padding: 0.4rem; /* Reduce padding for inputs within the table */
+        font-size: 0.85rem; /* Match font size */
+        width: 100%; /* Ensure inputs try to fill cell, but cell width will be constrained by table layout */
+    }
+
+    #invoice-items-table .btn-danger { /* Assuming delete button uses btn-danger */
+        padding: 0.3rem 0.6rem; /* Smaller padding for action buttons */
+        font-size: 0.8rem;
+    }
+}
+
+/* Action Bar (Dashboard: Title and Button) */
+@media (max-width: 576px) { /* For smaller mobile screens */
+    .main-content-area .d-flex.justify-between.align-center {
+        flex-direction: column;
+        align-items: flex-start; /* Align items to the start */
+        gap: 15px; /* Add some space when stacked */
+    }
+
+    .main-content-area .d-flex.justify-between.align-center h1 {
+        margin-bottom: 0; /* Remove bottom margin if stacked */
+    }
+
+    .main-content-area .d-flex.justify-between.align-center .btn-primary {
+        width: 100%; /* Make button full width */
+        text-align: center;
+    }
+}
