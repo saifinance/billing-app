@@ -35,10 +35,28 @@ let itemLinesContainer;
 let invoiceForm;
 let currentInvoiceId = null; // Used for edit mode, set by DOMContentLoaded
 
+// --- Responsive Navigation ---
+function initializeResponsiveNavigation() {
+    const navToggle = document.querySelector('.nav-toggle');
+    const appNav = document.querySelector('.app-nav');
+
+    if (navToggle && appNav) {
+        navToggle.addEventListener('click', () => {
+            appNav.classList.toggle('active');
+            // Toggle aria-expanded attribute for accessibility
+            const isExpanded = appNav.classList.contains('active');
+            navToggle.setAttribute('aria-expanded', isExpanded);
+        });
+    }
+}
+
 // --- DOMContentLoaded ---
 document.addEventListener('DOMContentLoaded', () => {
     const yearSpan = document.getElementById('year');
     if (yearSpan) yearSpan.textContent = new Date().getFullYear();
+
+    // Initialize responsive navigation
+    initializeResponsiveNavigation();
 
     // initAuth() in auth.js will now handle triggering page-specific logic
     // after auth state is confirmed, by calling functions defined in this file (app.js)
