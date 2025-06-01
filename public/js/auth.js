@@ -25,21 +25,28 @@ function cacheAuthDOMElements() {
     createNewInvoiceBtnDashboard = document.getElementById('btn-create-new-invoice'); // Button on dashboard
 }
 
-
 // --- UI Update Logic ---
-function updateAuthUI(user, isInitialLoad = false) {
+async function updateAuthUI(user, isInitialLoad = false) {
     if (!signinLink) cacheAuthDOMElements();
 
     mainContentAreas.forEach(area => area.style.visibility = 'visible');
 
     if (user) {
+        // Check if user is admin
+        const adminStatus = await checkAdminStatus(user);
+        if (!adminStatus) {
+            // If not admin, sign them out
+            await firebase.auth().signOut();
+            alert('Access denied. Only admin users can access this application.');
+            return;
+        }
+
         if (userEmailDisplay) { userEmailDisplay.textContent = user.email; userEmailDisplay.style.display = 'inline'; }
         if (signinLink) signinLink.style.display = 'none';
         if (signoutLink) signoutLink.style.display = 'inline';
         if (authModal && authModal.style.display !== 'none') closeAuthModal();
         if (navCreateInvoiceLink) navCreateInvoiceLink.style.display = 'inline-block';
         if (createNewInvoiceBtnDashboard) createNewInvoiceBtnDashboard.style.display = 'inline-flex';
-
 
         if (saveInvoiceBtn && window.location.pathname.includes('create-invoice.html')) {
             saveInvoiceBtn.disabled = false;
@@ -49,16 +56,13 @@ function updateAuthUI(user, isInitialLoad = false) {
         if (userEmailDisplay) userEmailDisplay.style.display = 'none';
         if (signinLink) signinLink.style.display = 'inline';
         if (signoutLink) signoutLink.style.display = 'none';
-        if (createNewInvoiceBtnDashboard) createNewInvoiceBtnDashboard.style.display = 'none'; // Hide if not logged in
-
+        if (createNewInvoiceBtnDashboard) createNewInvoiceBtnDashboard.style.display = 'none';
 
         const currentPath = window.location.pathname;
-        // Show modal immediately if on a page that requires auth and it's the initial check
         const isPotentiallyProtectedPage = currentPath.includes('create-invoice.html') ||
                                        currentPath.includes('view-invoice.html') ||
-                                       currentPath.includes('index.html') || // Dashboard also requires login to see invoices
+                                       currentPath.includes('index.html') ||
                                        currentPath === '/' || currentPath.endsWith('/billing-app/') || currentPath.endsWith('/billing-app');
-
 
         if (isPotentiallyProtectedPage && isInitialLoad) {
             openAuthModal('signin');
@@ -68,28 +72,48 @@ function updateAuthUI(user, isInitialLoad = false) {
             saveInvoiceBtn.disabled = true;
             saveInvoiceBtn.innerHTML = '<i class="fas fa-lock"></i> Sign in to Save';
         }
-        if (navCreateInvoiceLink) navCreateInvoiceLink.style.display = 'inline-block'; // Keep nav link visible
+        if (navCreateInvoiceLink) navCreateInvoiceLink.style.display = 'inline-block';
+    }
+}
+
+// --- Admin Verification ---
+async function checkAdminStatus(user) {
+    if (!user) return false;
+    try {
+        // Pass true to force a refresh of the token and get the latest claims.
+        const idTokenResult = await user.getIdTokenResult(true);
+        console.log('User claims from ID token:', idTokenResult.claims);
+        return idTokenResult.claims.admin === true;
+    } catch (error) {
+        console.error('Error getting user claims / checking admin status:', error);
+        return false;
     }
 }
 
 // --- Modal and Form Switching ---
 function openAuthModal(showForm = 'signin') {
-    if (!authModal || !signinForm || !signupForm) cacheAuthDOMElements();
-    if (authModal) authModal.style.display = 'flex';
-    if (showForm === 'signin') {
-        if (signupForm) signupForm.style.display = 'none';
-        if (signinForm) signinForm.style.display = 'block';
+    if (!authModal || !signinForm || !signupForm) {
+        console.error('Auth modal or forms not found in DOM');
+        return;
+    }
+    authModal.style.display = 'flex';
+    if (showForm === 'signup') {
+        signupForm.style.display = 'block';
+        signinForm.style.display = 'none';
     } else {
-        if (signinForm) signinForm.style.display = 'none';
-        if (signupForm) signupForm.style.display = 'block';
+        signinForm.style.display = 'block';
+        signupForm.style.display = 'none';
     }
     if (signinErrorP) signinErrorP.textContent = '';
     if (signupErrorP) signupErrorP.textContent = '';
 }
 
 function closeAuthModal() {
-    if (!authModal) cacheAuthDOMElements();
-    if (authModal) authModal.style.display = 'none';
+    if (authModal) {
+        authModal.style.display = 'none';
+    }
+    if (signinErrorP) signinErrorP.textContent = '';
+    if (signupErrorP) signupErrorP.textContent = '';
 }
 
 // --- Firebase Auth Actions ---
@@ -120,19 +144,37 @@ async function handleSignUp(e) {
     if (!signupErrorP || !firebase.auth) return;
     signupErrorP.textContent = '';
     const email = document.getElementById('signup-email').value;
-    const password = document.getElementById('signup-password').value; // Assuming confirm password logic is separate or not critical path for this example
+    const password = document.getElementById('signup-password').value;
     const submitButton = signupForm.querySelector('button[type="submit"]');
     const originalButtonText = submitButton.innerHTML;
-    if (password.length < 6) { signupErrorP.textContent = "Password should be at least 6 characters."; return; }
+
     submitButton.disabled = true;
-    submitButton.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Signing Up...`;
+    submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Signing Up...';
+
     try {
-        await firebase.auth().createUserWithEmailAndPassword(email, password);
+        const userCredential = await firebase.auth().createUserWithEmailAndPassword(email, password);
+        console.log('User created:', userCredential.user.uid);
+
+        // The setAdminClaim Cloud Function will be triggered on user creation.
+        // It will handle creating a user document in Firestore for the first admin.
+        // No need for client to write to /users collection here, as it would fail for non-admins.
+
         if (signupForm) signupForm.reset();
-        openAuthModal('signin'); // Switch to sign-in after successful signup
+        openAuthModal('signin'); // Switch to sign-in form
+        alert('Account created successfully! Please sign in.');
+
     } catch (error) {
         console.error("Sign up error:", error);
-        signupErrorP.textContent = error.message;
+        // Display more user-friendly messages for common errors
+        if (error.code === 'auth/email-already-in-use') {
+            signupErrorP.textContent = 'This email address is already in use. Please try a different email or sign in.';
+        } else if (error.code === 'auth/weak-password') {
+            signupErrorP.textContent = 'Password is too weak. Please choose a stronger password (at least 6 characters).';
+        } else if (error.code === 'auth/invalid-email') {
+            signupErrorP.textContent = 'The email address is not valid. Please enter a correct email.';
+        } else {
+            signupErrorP.textContent = error.message; // Fallback to default Firebase error
+        }
     } finally {
         submitButton.disabled = false;
         submitButton.innerHTML = originalButtonText;
@@ -183,7 +225,6 @@ function initAuth() {
              if (invoiceViewArea && path.includes('view-invoice.html')) {
                 invoiceViewArea.innerHTML = '<p style="text-align:center; color:red;">Please sign in to view this invoice.</p>';
             }
-            // For create-invoice.html, save button is disabled by updateAuthUI
         }
 
         // Trigger page-specific logic

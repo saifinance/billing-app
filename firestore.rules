@@ -21,15 +21,17 @@ service cloud.firestore {
                // Add more validation for item structure if needed
       }
 
-      allow read, update, delete: if request.auth != null && request.auth.uid == resource.data.userId;
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && request.auth.token.admin == true;
+      allow update, delete: if request.auth != null && request.auth.uid == resource.data.userId;
       allow create: if request.auth != null
                       && request.auth.uid == request.resource.data.userId // Ensure userId in doc matches creator
                       && hasRequiredInvoiceFields();
     }
 
-    // Example for user-specific settings if you add them later
-    // match /users/{userId}/settings/{settingDoc} {
-    //   allow read, write: if request.auth != null && request.auth.uid == userId;
-    // }
+    // Only allow admin users to read/write to users collection
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.token.admin == true;
+    }
   }
 }

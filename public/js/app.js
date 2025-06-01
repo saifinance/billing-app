@@ -301,81 +301,6 @@ function calculateTotals() {
     document.getElementById('total-amount').textContent = `₹${(subtotal + cgstAmount + sgstAmount).toFixed(2)}`;
 }
 
-async function handleInvoiceFormSubmit(event) {
-    event.preventDefault();
-    if (!firebase.auth().currentUser) {
-        alert("Please sign in to save the invoice.");
-        openAuthModal('signin'); // Helper function in auth.js to show modal
-        return;
-    }
-
-    const invoiceIdField = document.getElementById('invoice-id');
-    const idForSave = invoiceIdField ? invoiceIdField.value : null;
-
-    const items = Array.from(itemLinesContainer.querySelectorAll('tr')).map(row => {
-        const description = row.querySelector('.item-description').value.trim();
-        const quantity = parseFloat(row.querySelector('.item-qty').value);
-        const unitPrice = parseFloat(row.querySelector('.item-price').value);
-        return {
-            description,
-            quantity: isNaN(quantity) ? 0 : quantity,
-            unitPrice: isNaN(unitPrice) ? 0 : unitPrice,
-            amount: (isNaN(quantity) ? 0 : quantity) * (isNaN(unitPrice) ? 0 : unitPrice)
-        };
-    }).filter(item => item.description); // Only include items with a description
-
-    if (items.length === 0) {
-        alert('Please add at least one item with a description.');
-        return;
-    }
-
-    let subtotalVal = items.reduce((sum, item) => sum + item.amount, 0);
-    const applyGst = document.getElementById('apply-intra-state-gst').checked;
-    let cgstRateVal = 0, sgstRateVal = 0, cgstAmountVal = 0, sgstAmountVal = 0;
-    if (applyGst) {
-        cgstRateVal = parseFloat(document.getElementById('cgst-rate').value) || 0;
-        sgstRateVal = parseFloat(document.getElementById('sgst-rate').value) || 0;
-        cgstAmountVal = subtotalVal * (cgstRateVal / 100);
-        sgstAmountVal = subtotalVal * (sgstRateVal / 100);
-    }
-
-    const invoiceData = {
-        clientName: document.getElementById('client-name').value.trim(),
-        clientEmail: document.getElementById('client-email').value.trim(),
-        clientPhone: document.getElementById('client-phone').value.trim(),
-        clientAddress: document.getElementById('client-address').value.trim(),
-        invoiceNumber: document.getElementById('invoice-number').value.trim(),
-        invoiceDate: document.getElementById('invoice-date').value,
-        dueDate: document.getElementById('due-date').value,
-        status: document.getElementById('invoice-status').value,
-        items,
-        subTotal: parseFloat(subtotalVal.toFixed(2)),
-        intraStateGstApplied: applyGst,
-        cgstRate: cgstRateVal, sgstRate: sgstRateVal,
-        cgstAmount: parseFloat(cgstAmountVal.toFixed(2)), sgstAmount: parseFloat(sgstAmountVal.toFixed(2)),
-        totalAmount: parseFloat((subtotalVal + cgstAmountVal + sgstAmountVal).toFixed(2)),
-        notes: document.getElementById('notes').value.trim(),
-        // userId is added by firestoreService.saveInvoice
-    };
-
-    if (!invoiceData.clientName || !invoiceData.invoiceNumber || !invoiceData.invoiceDate || !invoiceData.dueDate) {
-        alert('Required fields missing: Client Name, Invoice #, Invoice Date, Due Date.');
-        return;
-    }
-
-    const submitButton = document.getElementById('save-invoice-btn');
-    try {
-        if (submitButton) { submitButton.disabled = true; submitButton.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Saving...`; }
-        await saveInvoice(invoiceData, idForSave);
-        alert(`Invoice ${idForSave ? 'updated' : 'saved'} successfully!`);
-        window.location.href = 'index.html';
-    } catch (error) {
-        alert(`Error saving invoice: ${error.message}`);
-        console.error("Form Submit Error:", error);
-        if (submitButton) { submitButton.disabled = false; submitButton.innerHTML = `<i class="fas fa-save"></i> ${idForSave ? 'Update' : 'Save'} Invoice`; }
-    }
-}
-
 async function loadInvoiceForEditing(invoiceId) {
     const pageTitle = document.getElementById('page-title');
     const saveBtn = document.getElementById('save-invoice-btn');
@@ -390,37 +315,32 @@ async function loadInvoiceForEditing(invoiceId) {
             document.getElementById('client-email').value = invoice.clientEmail || '';
             document.getElementById('client-phone').value = invoice.clientPhone || '';
             document.getElementById('client-address').value = invoice.clientAddress || '';
+            document.getElementById('loan-type').value = invoice.loanType || '';
+            document.getElementById('loan-application-no').value = invoice.loanApplicationNo || '';
+            document.getElementById('loan-account-no').value = invoice.loanAccountNo || '';
+            document.getElementById('loan-disbursement-amount').value = invoice.loanDisbursementAmount || '';
             document.getElementById('invoice-number').value = invoice.invoiceNumber || '';
-            document.getElementById('invoice-date').value = invoice.invoiceDate || ''; // Assumes date is stored as YYYY-MM-DD string
-            document.getElementById('due-date').value = invoice.dueDate || '';
+            document.getElementById('invoice-date').value = invoice.invoiceDate ? new Date(invoice.invoiceDate).toISOString().split('T')[0] : '';
+            document.getElementById('due-date').value = invoice.dueDate ? new Date(invoice.dueDate).toISOString().split('T')[0] : '';
             document.getElementById('invoice-status').value = invoice.status || 'Draft';
-            document.getElementById('notes').value = invoice.notes || DEFAULT_BANK_DETAILS;
-
-            const qrUpiIdText = document.getElementById('qr-upi-id-text');
-            if (qrUpiIdText) {
-                const match = (invoice.notes || DEFAULT_BANK_DETAILS).match(/UPI ID: ([\w@.-]+)/);
-                qrUpiIdText.textContent = match && match[1] ? `(UPI ID: ${match[1]})` : `(UPI ID: YOUR_UPI_ID_HERE)`;
+            
+            if (invoice.items && Array.isArray(invoice.items)) {
+                itemLinesContainer.innerHTML = '';
+                invoice.items.forEach(item => addItemLine(item));
             }
-
-            itemLinesContainer.innerHTML = '';
-            if (invoice.items && invoice.items.length > 0) invoice.items.forEach(item => addItemLine(item));
-            else addItemLine();
-
-            const applyGstCheckbox = document.getElementById('apply-intra-state-gst');
-            const gstInputsContainer = document.getElementById('gst-inputs-container');
-            const cgstDisplay = document.getElementById('cgst-amount-display');
-            const sgstDisplay = document.getElementById('sgst-amount-display');
-
-            applyGstCheckbox.checked = invoice.intraStateGstApplied || false;
-            if(gstInputsContainer) gstInputsContainer.style.display = applyGstCheckbox.checked ? 'block' : 'none';
-            if(cgstDisplay) cgstDisplay.style.display = applyGstCheckbox.checked ? 'block' : 'none';
-            if(sgstDisplay) sgstDisplay.style.display = applyGstCheckbox.checked ? 'block' : 'none';
-
-
-            if (invoice.intraStateGstApplied) {
-                document.getElementById('cgst-rate').value = invoice.cgstRate !== undefined ? invoice.cgstRate : 9;
-                document.getElementById('sgst-rate').value = invoice.sgstRate !== undefined ? invoice.sgstRate : 9;
+            
+            if (invoice.notes) document.getElementById('notes').value = invoice.notes;
+            
+            if (invoice.applyIntraStateGst !== undefined) {
+                document.getElementById('apply-intra-state-gst').checked = invoice.applyIntraStateGst;
+                if (invoice.applyIntraStateGst) {
+                    document.getElementById('gst-inputs-container').style.display = 'block';
+                }
             }
+            
+            if (invoice.cgstRate !== undefined) document.getElementById('cgst-rate').value = invoice.cgstRate;
+            if (invoice.sgstRate !== undefined) document.getElementById('sgst-rate').value = invoice.sgstRate;
+            
             calculateTotals();
         } else {
             if (pageTitle) pageTitle.textContent = 'Invoice Not Found or No Permission';
@@ -430,5 +350,64 @@ async function loadInvoiceForEditing(invoiceId) {
         if (pageTitle) pageTitle.textContent = 'Error Loading Invoice';
         alert('Error loading invoice for editing: ' + error.message);
         console.error("Edit Load Error:", error);
+    }
+}
+
+async function handleInvoiceFormSubmit(event) {
+    event.preventDefault();
+    if (!firebase.auth().currentUser) {
+        alert("Please sign in to save the invoice.");
+        openAuthModal('signin');
+        return;
+    }
+
+    const invoiceIdField = document.getElementById('invoice-id');
+    const idForSave = invoiceIdField ? invoiceIdField.value : null;
+
+    const invoiceData = {
+        clientName: document.getElementById('client-name').value,
+        clientEmail: document.getElementById('client-email').value,
+        clientPhone: document.getElementById('client-phone').value,
+        clientAddress: document.getElementById('client-address').value,
+        loanType: document.getElementById('loan-type').value,
+        loanApplicationNo: document.getElementById('loan-application-no').value,
+        loanAccountNo: document.getElementById('loan-account-no').value,
+        loanDisbursementAmount: parseFloat(document.getElementById('loan-disbursement-amount').value) || 0,
+        invoiceNumber: document.getElementById('invoice-number').value,
+        invoiceDate: new Date(document.getElementById('invoice-date').value),
+        dueDate: new Date(document.getElementById('due-date').value),
+        status: document.getElementById('invoice-status').value,
+        items: Array.from(itemLinesContainer.querySelectorAll('tr')).map(row => ({
+            description: row.querySelector('.item-description').value.trim(),
+            quantity: parseFloat(row.querySelector('.item-qty').value),
+            unitPrice: parseFloat(row.querySelector('.item-price').value),
+            amount: parseFloat(row.querySelector('.line-amount').textContent.replace('₹', ''))
+        })),
+        notes: document.getElementById('notes').value,
+        applyIntraStateGst: document.getElementById('apply-intra-state-gst').checked,
+        cgstRate: parseFloat(document.getElementById('cgst-rate').value) || 0,
+        sgstRate: parseFloat(document.getElementById('sgst-rate').value) || 0,
+        cgstAmount: parseFloat(document.getElementById('cgst-amount').textContent.replace('₹', '')) || 0,
+        sgstAmount: parseFloat(document.getElementById('sgst-amount').textContent.replace('₹', '')) || 0,
+        totalAmount: parseFloat(document.getElementById('total-amount').textContent.replace('₹', ''))
+    };
+
+    try {
+        const submitButton = document.getElementById('save-invoice-btn');
+        if (submitButton) { 
+            submitButton.disabled = true;
+            submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+        }
+        await saveInvoice(invoiceData, idForSave);
+        alert(`Invoice ${idForSave ? 'updated' : 'saved'} successfully!`);
+        window.location.href = 'index.html';
+    } catch (error) {
+        alert(`Error saving invoice: ${error.message}`);
+        console.error("Form Submit Error:", error);
+        const submitButton = document.getElementById('save-invoice-btn');
+        if (submitButton) { 
+            submitButton.disabled = false;
+            submitButton.innerHTML = `<i class="fas fa-save"></i> ${idForSave ? 'Update' : 'Save'} Invoice`;
+        }
     }
 }

@@ -135,6 +135,10 @@ const DEFAULT_BANK_DETAILS_VIEW = (typeof DEFAULT_BANK_DETAILS !== 'undefined' ?
                             <p>${bill.clientAddress ? bill.clientAddress.replace(/\n/g, '<br>') : 'N/A'}</p>
                             <p>Phone: ${bill.clientPhone || 'N/A'}</p>
                             <p>Email: ${bill.clientEmail || 'N/A'}</p>
+                            <p><strong>Loan Type:</strong> ${bill.loanType || 'N/A'}</p>
+                            <p><strong>Loan Application No.:</strong> ${bill.loanApplicationNo || 'N/A'}</p>
+                            <p><strong>Loan Account No.:</strong> ${bill.loanAccountNo || 'N/A'}</p>
+                            <p><strong>Loan Disbursement Amount:</strong> ₹${(bill.loanDisbursementAmount !== undefined ? parseFloat(bill.loanDisbursementAmount).toFixed(2) : 'N/A')}</p>
                         </div>
                         <div>
                             <h3>Bill Details:</h3>
