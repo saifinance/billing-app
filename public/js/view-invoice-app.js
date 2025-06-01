@@ -81,6 +81,11 @@ const DEFAULT_BANK_DETAILS_VIEW = (typeof DEFAULT_BANK_DETAILS !== 'undefined' ?
     
             if (bill) {
                 document.title = `Bill ${bill.invoiceNumber || billId} - Sai Billing`;
+
+                const loanType = bill.loanType || 'N/A';
+                const loanApplicationNumber = bill.loanApplicationNumber || 'N/A';
+                const loanAccountNumber = bill.loanAccountNumber || 'N/A';
+                const loanDisbursementAmount = bill.loanDisbursementAmount ? `₹${parseFloat(bill.loanDisbursementAmount).toFixed(2)}` : 'N/A';
     
                 let itemsHtml = '';
                 // ... (itemsHtml generation remains the same) ...
@@ -145,6 +150,13 @@ const DEFAULT_BANK_DETAILS_VIEW = (typeof DEFAULT_BANK_DETAILS !== 'undefined' ?
                         </div>
                     </div>
     
+                    <div class="invoice-section loan-details-view">
+                        <h3>Loan Details:</h3>
+                        <p><strong>Loan Type:</strong> ${loanType}</p>
+                        <p><strong>Loan Application No.:</strong> ${loanApplicationNumber}</p>
+                        <p><strong>Loan Account No.:</strong> ${loanAccountNumber}</p>
+                        <p><strong>Loan Disbursement Amount:</strong> ${loanDisbursementAmount}</p>
+                    </div>
                     
     
                     <table class="invoice-items-table-view">

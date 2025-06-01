@@ -383,3 +383,155 @@ tbody tr:hover { background-color: #f1f1f1; }
 .fa-spinner.fa-spin {
     margin-right: 5px;
 }
+
+/* Loan Details View Section */
+.loan-details-view {
+    padding: 10px;
+    margin-bottom: 20px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    background-color: #fdfdfd;
+}
+.loan-details-view h3 {
+    margin-bottom: 10px;
+    color: var(--primary-color);
+}
+.loan-details-view p {
+    margin-bottom: 5px;
+    font-size: 0.9em;
+}
+
+/* --- Responsive Styles --- */
+
+/* Header Navigation & Auth Links - Medium Screens and below */
+@media (max-width: 768px) {
+    .app-header {
+        height: auto; /* Adjust header height if nav stacks */
+        padding-top: 10px;
+        padding-bottom: 10px;
+    }
+    .header-container {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    /* Basic Mobile Nav Styling (Stacking) */
+    /* For a full hamburger menu, JS would toggle a class like .nav-active */
+    /* .app-nav ul { display: none; } */ /* Example: Hide by default for hamburger */
+    /* .app-nav.nav-active ul { display: flex; } */ /* Example: Show when active */
+    .app-nav ul {
+        flex-direction: column;
+        width: 100%;
+        margin-top: 10px;
+    }
+    .app-nav li {
+        width: 100%;
+        text-align: left;
+        margin-bottom: 5px;
+    }
+    .app-nav a {
+        display: block; /* Make links take full width */
+        padding: 10px;
+        border-bottom: 1px solid var(--border-color);
+    }
+    .app-nav a.active, .app-nav a:hover {
+        border-bottom: 1px solid var(--accent-pink-color); /* Keep consistent active/hover style */
+    }
+    #auth-container { /* Ensure auth links stack correctly */
+        width: 100%;
+        margin-top: 10px; /* Add some space if nav is above */
+    }
+    #user-email-display,
+    #signin-link,
+    #signout-link {
+         display: block !important; /* Ensure they are block for stacking */
+         padding: 10px;
+         border-bottom: 1px solid var(--border-color);
+         width: 100%; /* Take full width */
+    }
+    #user-email-display { /* Specific for display span if needed */
+        color: var(--medium-text-color); /* Keep consistent styling */
+    }
+    #signin-link, #signout-link { /* Ensure links look like other nav items */
+        color: var(--dark-text-color);
+        font-weight: 600;
+    }
+    #signin-link:hover, #signout-link:hover {
+        color: var(--accent-purple-color);
+    }
+}
+
+/* Tables - Medium Screens and below */
+@media (max-width: 768px) {
+    .table-wrapper {
+        /* overflow-x: auto; is already global, which is good */
+        /* Optional: Add a border to indicate scrollable area more clearly */
+        border-left: 1px solid var(--border-color);
+        border-right: 1px solid var(--border-color);
+        border-radius: 0; /* Remove radius if adding side borders for a cleaner look */
+    }
+    /* Make table cells in invoice item lines a bit more responsive */
+    #invoice-items-table td input[type="text"],
+    #invoice-items-table td input[type="number"] {
+        min-width: 60px; /* Prevent them from becoming too small */
+        padding: 0.4rem; /* Slightly reduce padding */
+        font-size: 0.9rem;
+    }
+    #invoice-items-table .item-description {
+        min-width: 150px; /* Allow description to be wider */
+    }
+    #invoice-items-table th, #invoice-items-table td {
+        padding: 6px; /* Reduce padding in table cells */
+    }
+    .actions-cell button { /* Ensure action buttons in tables are not too large */
+        padding: 0.4rem;
+        font-size: 0.8rem;
+    }
+}
+
+/* Forms - Smaller Screens */
+@media (max-width: 600px) {
+    .form-section {
+        padding: 20px 15px; /* Reduce padding on smaller screens */
+    }
+    .form-grid {
+        grid-template-columns: 1fr; /* Stack to single column on very small screens */
+    }
+    .auth-modal-content-box { /* Adjust auth modal padding on small screens */
+        padding: 25px 20px;
+    }
+    .auth-modal-content-box h2 {
+        font-size: 1.4rem;
+    }
+}
+
+/* General Layout and Font Sizes - Very Small Screens */
+@media (max-width: 480px) {
+    body {
+        font-size: 14px; /* Slightly smaller base font for very small devices */
+    }
+    .container {
+        padding-left: 10px;
+        padding-right: 10px;
+    }
+    .logo-text {
+        font-size: 1.6rem; /* Adjust logo size */
+    }
+    .btn {
+        padding: 0.5rem 0.9rem; /* Adjust button padding */
+        font-size: 0.85rem;
+    }
+    h1, #page-title { /* Target h1 and common page title id */
+        font-size: 1.5rem;
+    }
+    .form-section h2 { /* Target form section titles */
+        font-size: 1.3rem;
+    }
+    /* Adjust padding for main content area if header becomes taller */
+    main {
+        padding-top: 80px; /* Default was 70px, might need more if header stacks */
+    }
+    .app-header { /* If header content stacks significantly, may need more top/bottom padding */
+        padding-top: 15px;
+        padding-bottom: 15px;
+    }
+}

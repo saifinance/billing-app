@@ -239,6 +239,12 @@ async function populateNewInvoiceDetails() {
     }
 
     itemLinesContainer.innerHTML = '';
+    // Clear Loan Fields
+    if(document.getElementById('loan-type')) document.getElementById('loan-type').value = '';
+    if(document.getElementById('loan-application-no')) document.getElementById('loan-application-no').value = '';
+    if(document.getElementById('loan-account-no')) document.getElementById('loan-account-no').value = '';
+    if(document.getElementById('loan-disbursement-amount')) document.getElementById('loan-disbursement-amount').value = '';
+
     addItemLine(); // Add one blank line
     calculateTotals();
 }
@@ -355,6 +361,11 @@ async function handleInvoiceFormSubmit(event) {
         cgstAmount: parseFloat(cgstAmountVal.toFixed(2)), sgstAmount: parseFloat(sgstAmountVal.toFixed(2)),
         totalAmount: parseFloat((subtotalVal + cgstAmountVal + sgstAmountVal).toFixed(2)),
         notes: document.getElementById('notes').value.trim(),
+        // Loan Fields
+        loanType: document.getElementById('loan-type').value.trim(),
+        loanApplicationNumber: document.getElementById('loan-application-no').value.trim(),
+        loanAccountNumber: document.getElementById('loan-account-no').value.trim(),
+        loanDisbursementAmount: parseFloat(document.getElementById('loan-disbursement-amount').value) || 0,
         // userId is added by firestoreService.saveInvoice
     };
 
@@ -395,6 +406,12 @@ async function loadInvoiceForEditing(invoiceId) {
             document.getElementById('due-date').value = invoice.dueDate || '';
             document.getElementById('invoice-status').value = invoice.status || 'Draft';
             document.getElementById('notes').value = invoice.notes || DEFAULT_BANK_DETAILS;
+
+            // Populate Loan Fields
+            document.getElementById('loan-type').value = invoice.loanType || '';
+            document.getElementById('loan-application-no').value = invoice.loanApplicationNumber || '';
+            document.getElementById('loan-account-no').value = invoice.loanAccountNumber || '';
+            document.getElementById('loan-disbursement-amount').value = invoice.loanDisbursementAmount || '';
 
             const qrUpiIdText = document.getElementById('qr-upi-id-text');
             if (qrUpiIdText) {
