@@ -463,3 +463,75 @@ tbody tr:hover { background-color: #f1f1f1; }
         font-size: 1.1rem;
     }
 }
+
+/* Responsive styles for invoice actions bar */
+.invoice-actions-bar {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+    flex-wrap: wrap;
+}
+
+.invoice-actions-bar .btn,
+.invoice-actions-bar a.btn {
+    margin-left: 10px;
+}
+
+@media screen and (max-width: 768px) {
+    .invoice-actions-bar {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+        margin: 15px 0;
+        padding: 10px;
+        background-color: #f8f9fa; /* Light background for better visibility */
+        border-radius: 5px; /* Optional: adds rounded corners */
+    }
+
+    .invoice-actions-bar .btn,
+    .invoice-actions-bar a.btn,
+    #print-invoice-btn { /* Explicitly target the print button */
+        width: 100%;
+        margin: 5px 0 !important; /* Add some vertical spacing */
+        padding: 10px 15px; /* Ensure enough padding for touch targets */
+        text-align: center;
+        box-sizing: border-box; /* Include padding in width/height */
+        display: block; /* Ensure buttons take full width */
+    }
+}
+
+/* Ensure Print Bill button is visible on mobile */
+#print-invoice-btn {
+    display: inline-block !important; /* Override any display: none */
+    opacity: 1 !important; /* Ensure it's not transparent */
+    visibility: visible !important; /* Ensure it's not hidden */
+}
+
+@media screen and (max-width: 768px) {
+    .invoice-actions-bar {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+        margin: 15px 0;
+        padding: 15px; /* Increased padding */
+        background-color: #f8f9fa;
+        border-radius: 5px;
+    }
+
+    .invoice-actions-bar .btn,
+    .invoice-actions-bar a.btn,
+    #print-invoice-btn { /* Explicitly target the print button */
+        width: 100%;
+        margin: 8px 0 !important; /* Slightly more spacing */
+        padding: 12px 15px; /* Larger touch target */
+        text-align: center;
+        box-sizing: border-box;
+        display: block !important; /* Force display */
+        font-size: 1rem; /* Ensure readable text */
+    }
+    
+    /* Make sure no other rules are hiding the print button */
+    #print-invoice-btn[style*="display: none"] {
+        display: block !important;
+    }
+}
