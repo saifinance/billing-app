@@ -301,6 +301,30 @@ function calculateTotals() {
     document.getElementById('total-amount').textContent = `₹${(subtotal + cgstAmount + sgstAmount).toFixed(2)}`;
 }
 
+// Helper function to format dates for input fields
+function formatDateForInput(firestoreTimestamp) {
+    if (!firestoreTimestamp) return '';
+    try {
+        let dateObj;
+        if (typeof firestoreTimestamp.toDate === 'function') {
+            dateObj = firestoreTimestamp.toDate(); // Convert Firestore Timestamp to JS Date
+        } else if (firestoreTimestamp instanceof Date) {
+            dateObj = firestoreTimestamp; // Already a JS Date
+        } else {
+            dateObj = new Date(firestoreTimestamp); // Attempt to parse if string/number
+        }
+
+        if (isNaN(dateObj.valueOf())) { // Check if date is valid
+            console.warn('formatDateForInput: Received an invalid date value:', firestoreTimestamp);
+            return '';
+        }
+        return dateObj.toISOString().split('T')[0];
+    } catch (error) {
+        console.error('formatDateForInput: Error formatting date:', firestoreTimestamp, error);
+        return '';
+    }
+}
+
 async function loadInvoiceForEditing(invoiceId) {
     const pageTitle = document.getElementById('page-title');
     const saveBtn = document.getElementById('save-invoice-btn');
@@ -320,8 +344,8 @@ async function loadInvoiceForEditing(invoiceId) {
             document.getElementById('loan-account-no').value = invoice.loanAccountNo || '';
             document.getElementById('loan-disbursement-amount').value = invoice.loanDisbursementAmount || '';
             document.getElementById('invoice-number').value = invoice.invoiceNumber || '';
-            document.getElementById('invoice-date').value = invoice.invoiceDate ? new Date(invoice.invoiceDate).toISOString().split('T')[0] : '';
-            document.getElementById('due-date').value = invoice.dueDate ? new Date(invoice.dueDate).toISOString().split('T')[0] : '';
+            document.getElementById('invoice-date').value = formatDateForInput(invoice.invoiceDate);
+            document.getElementById('due-date').value = formatDateForInput(invoice.dueDate);
             document.getElementById('invoice-status').value = invoice.status || 'Draft';
             
             if (invoice.items && Array.isArray(invoice.items)) {

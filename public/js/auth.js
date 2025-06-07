@@ -26,53 +26,71 @@ function cacheAuthDOMElements() {
 }
 
 // --- UI Update Logic ---
-async function updateAuthUI(user, isInitialLoad = false) {
-    if (!signinLink) cacheAuthDOMElements();
+async function updateAuthUI(user, isInitialLoad = false) { // isInitialLoad is less critical for flashing now
+    console.log(`updateAuthUI called. Path: ${window.location.pathname}, User: ${user ? user.uid : 'None'}, isInitialLoad: ${isInitialLoad}`);
+    if (!signinLink) cacheAuthDOMElements(); // Ensure elements are cached if not already
 
-    mainContentAreas.forEach(area => area.style.visibility = 'visible');
+    // Do NOT make mainContentAreas globally visible here. Visibility is decided below.
 
     if (user) {
-        // Check if user is admin
+        console.log('updateAuthUI: User is present. Checking admin status...');
         const adminStatus = await checkAdminStatus(user);
-        if (!adminStatus) {
-            // If not admin, sign them out
-            await firebase.auth().signOut();
-            alert('Access denied. Only admin users can access this application.');
-            return;
-        }
 
+        if (!adminStatus) {
+            console.log('updateAuthUI: User is not admin. Signing out, hiding content, showing modal.');
+            if (mainContentAreas) mainContentAreas.forEach(area => area.style.visibility = 'hidden');
+            // Note: signOut will trigger onAuthStateChanged, which will call updateAuthUI again with user=null.
+            // So, opening modal here might be redundant but ensures it's shown if signOut is slow or alert blocks.
+            if (authModal && typeof openAuthModal === 'function') openAuthModal('signin'); 
+            await firebase.auth().signOut(); 
+            alert('Access denied. Only admin users can access this application.');
+            return; // Exit to prevent further UI changes for this non-admin state
+        }
+        
+        console.log('updateAuthUI: User is admin. Showing content, hiding modal.');
+        if (mainContentAreas) mainContentAreas.forEach(area => area.style.visibility = 'visible');
+        if (authModal && typeof closeAuthModal === 'function') closeAuthModal();
+
+        // Standard UI updates for logged-in admin user
         if (userEmailDisplay) { userEmailDisplay.textContent = user.email; userEmailDisplay.style.display = 'inline'; }
         if (signinLink) signinLink.style.display = 'none';
         if (signoutLink) signoutLink.style.display = 'inline';
-        if (authModal && authModal.style.display !== 'none') closeAuthModal();
         if (navCreateInvoiceLink) navCreateInvoiceLink.style.display = 'inline-block';
         if (createNewInvoiceBtnDashboard) createNewInvoiceBtnDashboard.style.display = 'inline-flex';
-
         if (saveInvoiceBtn && window.location.pathname.includes('create-invoice.html')) {
             saveInvoiceBtn.disabled = false;
             saveInvoiceBtn.innerHTML = '<i class="fas fa-save"></i> ' + (document.getElementById('invoice-id')?.value ? 'Update Invoice' : 'Save Invoice');
         }
-    } else {
+
+    } else { // No user (definitively from onAuthStateChanged or after signOut)
+        console.log('updateAuthUI: No user. Hiding content.');
+        if (mainContentAreas) mainContentAreas.forEach(area => area.style.visibility = 'hidden');
+
+        // Standard UI updates for logged-out user
         if (userEmailDisplay) userEmailDisplay.style.display = 'none';
         if (signinLink) signinLink.style.display = 'inline';
         if (signoutLink) signoutLink.style.display = 'none';
+        if (navCreateInvoiceLink) navCreateInvoiceLink.style.display = 'inline-block'; // Or hide if not relevant when logged out
         if (createNewInvoiceBtnDashboard) createNewInvoiceBtnDashboard.style.display = 'none';
+        if (saveInvoiceBtn && window.location.pathname.includes('create-invoice.html')) {
+            saveInvoiceBtn.disabled = true;
+            saveInvoiceBtn.innerHTML = '<i class="fas fa-lock"></i> Sign in to Save';
+        }
 
         const currentPath = window.location.pathname;
         const isPotentiallyProtectedPage = currentPath.includes('create-invoice.html') ||
                                        currentPath.includes('view-invoice.html') ||
-                                       currentPath.includes('index.html') ||
+                                       currentPath.includes('index.html') || 
                                        currentPath === '/' || currentPath.endsWith('/billing-app/') || currentPath.endsWith('/billing-app');
-
-        if (isPotentiallyProtectedPage && isInitialLoad) {
-            openAuthModal('signin');
+        
+        console.log(`updateAuthUI: No user. Path: ${currentPath}, isPotentiallyProtectedPage: ${isPotentiallyProtectedPage}`);
+        if (isPotentiallyProtectedPage) {
+            console.log('updateAuthUI: No user on protected page. Opening auth modal.');
+            if (typeof openAuthModal === 'function') openAuthModal('signin');
+        } else {
+            // If on a public page and somehow modal is open, close it.
+            if (authModal && typeof closeAuthModal === 'function') closeAuthModal(); 
         }
-
-        if (saveInvoiceBtn && currentPath.includes('create-invoice.html')) {
-            saveInvoiceBtn.disabled = true;
-            saveInvoiceBtn.innerHTML = '<i class="fas fa-lock"></i> Sign in to Save';
-        }
-        if (navCreateInvoiceLink) navCreateInvoiceLink.style.display = 'inline-block';
     }
 }
 
@@ -203,22 +221,40 @@ async function handleSignOut(e) {
 
 // --- Main Auth Initialization ---
 function initAuth() {
+    console.log('initAuth: Initializing authentication. Path:', window.location.pathname);
+    cacheAuthDOMElements(); // Cache DOM elements first
+
+    // Initially, hide main content and auth modal to prevent flash.
+    // CSS can also be used for a cleaner initial hidden state.
+    if (mainContentAreas) mainContentAreas.forEach(area => area.style.visibility = 'hidden');
+    if (authModal && typeof closeAuthModal === 'function') {
+        // Ensure modal is closed and hidden, closeAuthModal typically handles display:none
+        closeAuthModal(); 
+    } else if (authModal) {
+        authModal.style.display = 'none'; // Fallback if closeAuthModal isn't ready/defined
+    }
+
     if (!firebase.auth) {
         console.error("Firebase Auth SDK not loaded!");
-        document.querySelectorAll('.main-content-area').forEach(area => area.style.visibility = 'visible');
+        // If Firebase isn't loaded, we might want to show an error message instead of hiding everything.
+        // For now, content remains hidden as per above.
+        const body = document.querySelector('body');
+        if (body) body.innerHTML = '<p style="text-align:center;color:red;margin-top:50px;">Error: Firebase SDK not loaded. App cannot initialize.</p>';
         return;
     }
-    cacheAuthDOMElements();
-    updateAuthUI(null, true); // Initial UI: assume logged out, pass true for isInitialLoad
+    
+    // DO NOT call updateAuthUI(null, true) here. 
+    // onAuthStateChanged will make the first call to updateAuthUI with the actual user state.
 
     firebase.auth().onAuthStateChanged(user => {
-        console.log("Auth state changed. User:", user ? user.uid : 'None');
-        updateAuthUI(user, false);
+        console.log(`onAuthStateChanged: Auth state changed. User: ${user ? user.uid : 'None'}, Path: ${window.location.pathname}`);
+        // Pass false for isInitialLoad, as this is the definitive state from Firebase.
+        updateAuthUI(user, false); 
 
         const path = window.location.pathname;
         if (!user) { // If user logs out or session expires
             const tableBody = document.getElementById('invoices-table-body');
-            if (tableBody && (path.includes('index.html') || path === '/' || path.endsWith('/billing-app/'))) {
+            if (tableBody && (path.includes('index.html') || path === '/' || path.endsWith('/billing-app/') || path.endsWith('/billing-app'))) {
                 tableBody.innerHTML = '<tr><td colspan="7" style="text-align: center;">Please sign in to view invoices.</td></tr>';
             }
             const invoiceViewArea = document.getElementById('invoice-view-area');
